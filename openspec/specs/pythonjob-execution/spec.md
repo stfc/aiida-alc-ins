@@ -13,10 +13,11 @@ while provenance is still recorded.
 
 The plugin SHALL provide an input builder for every operation intended to run as
 a job: reading CASTEP force constants, reading Phonopy force constants,
-interpolating phonon modes, computing a dispersion, and computing a density of
-states. Each builder SHALL return inputs that can be launched directly as an
-AiiDA `PythonJob`, and each SHALL yield a scientifically valid result rather than
-merely a node of the expected type.
+interpolating phonon modes, computing a dispersion, computing a density of
+states, and computing scattering intensities for a spectrometer. Each builder
+SHALL return inputs that can be launched directly as an AiiDA `PythonJob`, and
+each SHALL yield a scientifically valid result rather than merely a node of the
+expected type.
 
 #### Scenario: A dispersion job produces phonon modes along a band path
 
@@ -46,6 +47,16 @@ merely a node of the expected type.
 - **THEN** the process finishes successfully and its result is a
   `ForceConstantsData` node equivalent to reading the same files directly with
   Euphonic
+
+#### Scenario: A scattering-intensity job produces a multi-line spectrum node
+
+- **WHEN** scattering-intensity inputs are built from a `QpointPhononModesData`
+  node and launched with a sample temperature, energy axis parameters and
+  scattering angles
+- **THEN** the process finishes successfully and its result is an `XyData` node
+- **AND** the node holds one line per contributing atom, quantum order and
+  scattering angle, each labelled and each of the same length as the energy axis
+- **AND** the intensities are finite, non-negative and not uniformly zero
 
 ### Requirement: Custom data nodes are translated at the process boundary
 
