@@ -38,6 +38,11 @@ _AIIDA_CONFIG_TMPDIR = tempfile.TemporaryDirectory(
 os.environ["AIIDA_PATH"] = _AIIDA_CONFIG_TMPDIR.name
 
 from aiida.manage.configuration import get_config  # noqa: E402
+from aiida.orm import Computer, InstalledCode  # noqa: E402
+from tests.slurm_support import (  # noqa: E402
+    SlurmContainer,
+    detect_container_engine,
+)
 
 get_config(create=True)
 
@@ -102,3 +107,68 @@ def python_code(aiida_code_installed):
         default_calc_job_plugin="pythonjob.pythonjob",
         filepath_executable=sys.executable,
     )
+
+
+@pytest.fixture(scope="session")
+def container_engine() -> str:
+    """Detect podman/docker or skip containerized integration tests if unavailable."""
+    engine = detect_container_engine()
+    if not engine:
+        pytest.skip("No working container engine (podman/docker) available")
+    return engine
+
+
+@pytest.fixture(scope="session")
+def slurm_container(container_engine: str, tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped Slurm container running ghcr.io/aiidateam/slurm-image."""
+    key_dir = tmp_path_factory.mktemp("slurm_keys")
+    project_root = Path(__file__).resolve().parent.parent
+    container = SlurmContainer(
+        engine=container_engine,
+        project_root=project_root,
+        key_dir=key_dir,
+    )
+    container.start()
+    try:
+        yield container
+    finally:
+        container.stop()
+
+
+@pytest.fixture(scope="session")
+def slurm_computer(aiida_profile, slurm_container: SlurmContainer) -> Computer:
+    """An AiiDA Computer configured for core.ssh + core.slurm on the container."""
+    computer = Computer(
+        label="slurm-container",
+        hostname="127.0.0.1",
+        transport_type="core.ssh",
+        scheduler_type="core.slurm",
+        workdir="/tmp/aiida_run",
+    )
+    computer.set_minimum_job_poll_interval(0.5)
+    computer.set_default_mpiprocs_per_machine(1)
+    computer.store()
+
+    computer.configure(
+        port=slurm_container.host_port,
+        username="ubuntu",
+        key_filename=str(slurm_container.ssh_key_file),
+        load_system_host_keys=False,
+        key_policy="AutoAddPolicy",
+        safe_interval=0.0,
+        use_login_shell=False,
+        timeout=10,
+    )
+    return computer
+
+
+@pytest.fixture(scope="session")
+def slurm_python_code(slurm_computer: Computer) -> InstalledCode:
+    """An AiiDA Code for running PythonJobs on the Slurm container."""
+    code = InstalledCode(
+        label="slurm-python",
+        computer=slurm_computer,
+        filepath_executable="/home/ubuntu/venv/bin/python",
+        default_calc_job_plugin="pythonjob.pythonjob",
+    )
+    return code.store()
