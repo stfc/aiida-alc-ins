@@ -120,7 +120,7 @@ def container_engine() -> str:
 
 @pytest.fixture(scope="session")
 def slurm_container(container_engine: str, tmp_path_factory: pytest.TempPathFactory):
-    """Session-scoped Slurm container running ghcr.io/aiidateam/slurm-image."""
+    """Session-scoped Slurm container built from tests/container/Dockerfile."""
     key_dir = tmp_path_factory.mktemp("slurm_keys")
     project_root = Path(__file__).resolve().parent.parent
     container = SlurmContainer(

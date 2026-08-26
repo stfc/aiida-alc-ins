@@ -32,7 +32,6 @@ PrintLastLog no
 AcceptEnv LANG LC_*
 Subsystem sftp internal-sftp
 StrictModes no
-LogLevel DEBUG
 EOF
 
 # 3. Pre-generate SSH host keys & munge key
@@ -64,12 +63,11 @@ RUN pip install --no-cache-dir uv && \
 # 5. Pre-bake authorized SSH key
 COPY id_rsa.pub /home/ubuntu/.ssh/authorized_keys
 RUN chmod 0600 /home/ubuntu/.ssh/authorized_keys && \
-    chown -R ubuntu:ubuntu /home/ubuntu /tmp/aiida_run && \
+    chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys && \
     chmod 0777 /tmp/aiida_run
 
 # 6. Slurm configuration & entrypoint
 COPY slurm.conf /etc/slurm/slurm.conf
-COPY cgroup.conf /etc/slurm/cgroup.conf
 RUN mkdir -p /var/spool/slurmctld /var/spool/slurmd /var/log/slurm /var/run/slurm /run/slurm && \
     chown -R slurm:slurm /var/spool/slurmctld /var/spool/slurmd /var/log/slurm /etc/slurm
 

@@ -1,3 +1,10 @@
+> **Superseded by [2026-08-26-tidy-slurm-test-infrastructure](../tidy-slurm-test-infrastructure)**
+> 
+> The following claims in this document do not describe the shipped system:
+> - **Base image recommendation**: This design recommended `xenonmiddleware/slurm` from Docker Hub (a six-year-old Ubuntu 16.04 build with Python 3.5 and Slurm 17.02) or `ghcr.io/aiidateam/slurm-image` (returns 403 on anonymous pull; other `aiidateam` packages pull successfully). The implementation builds a local image from `tests/container/Dockerfile` instead.
+> - **In-memory SSH key generation**: This design claimed keys were generated in-memory using paramiko. The implementation uses pre-baked keys committed to `tests/container/id_rsa`.
+> - **Engine-assigned port allocation**: This design specified `-p 127.0.0.1::22` to let the container engine assign a port. The implementation uses `find_free_port()` in Python and explicit `-p 127.0.0.1:{port}:22`.
+
 ## Context
 
 Current tests exercise WorkChains and PythonJobs on `localhost` using the active Python interpreter. To validate true remote execution where `aiida-pythonjob` serializes functions by reference, we need an SSH-accessible Slurm cluster. See `proposal.md` for motivation.

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import contextlib
 import logging
-import re
 import shutil
 import socket
 import subprocess
@@ -61,30 +60,6 @@ def find_free_port() -> int:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
 
-
-def discover_container_port(
-    engine: str, container_id: str, timeout: float = 5.0
-) -> int:
-    """Discover the host port mapped to container port 22."""
-    start_time = time.time()
-    last_err = ""
-    while time.time() - start_time < timeout:
-        res = subprocess.run(
-            [engine, "port", container_id, "22"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        output = res.stdout.strip()
-        match = re.search(r":(\d+)\s*$", output)
-        if match:
-            return int(match.group(1))
-        last_err = output or res.stderr.strip()
-        time.sleep(0.2)
-    msg = f"Failed to discover mapped SSH port for container {container_id}: {last_err}"
-    raise RuntimeError(msg)
-
-
 class SlurmContainer:
     """Manages an ephemeral Slurm container built from tests/container/Dockerfile."""
 
@@ -97,7 +72,7 @@ class SlurmContainer:
         self.host_port: int | None = None
         self.ssh_key_file: Path | None = None
 
-    def start(self, timeout: float = 30.0) -> None:
+    def start(self, timeout: float = 120.0) -> None:
         """Launch the container and wait for SSH & Slurm readiness."""
         # 0. Ensure container image is built
         image_tag = ensure_container_image(self.engine, self.project_root)
@@ -150,6 +125,8 @@ class SlurmContainer:
             raise RuntimeError(msg)
 
         # 4. Poll for SSH and Slurm readiness over SSH protocol directly
+        # Give SSH daemon a moment to initialize before first connection attempt
+        time.sleep(5)
         start_time = time.time()
         ready = False
         paramiko_logger = logging.getLogger("paramiko.transport")
