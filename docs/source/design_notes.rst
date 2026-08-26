@@ -146,3 +146,19 @@ Useful Practices in conftest.py
    plugin and its dependencies are installed.
 5. **Data fixtures**: ``conftest.py`` is also the right place to set up shared pytest fixtures used
    across multiple test files. If a fixture is only used in one file, define it there instead.
+
+Parallel Test Execution (Ad-Hoc)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The project does not declare ``pytest-xdist`` in default dev dependencies because session-scoped
+fixtures (such as containerized integration test fixtures) are not process-isolated or locked.
+
+Contributors wishing to run non-containerized unit tests in parallel can invoke ``pytest-xdist``
+ad-hoc via ``uv``:
+
+.. code-block:: bash
+
+   uv run --with pytest-xdist pytest -n auto -m "not containerized"
+
+Containerized tests are excluded (``-m "not containerized"``) because their session-scoped
+container fixture is not yet xdist-safe.

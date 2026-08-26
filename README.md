@@ -57,6 +57,14 @@ uv sync          # create .venv and install deps (+ dev group)
 uv run pytest    # run the test suite
 ```
 
+To run non-containerized tests in parallel ad-hoc:
+
+```bash
+uv run --with pytest-xdist pytest -n auto -m "not containerized"
+```
+
+*(Note: containerized tests are excluded because their session-scoped container fixture is not yet xdist-safe.)*
+
 ### aarch64 Euphonic wheel (local workaround)
 
 Euphonic is pinned to `~=2.0`. On **aarch64-Linux**, PyPI has no 2.x wheel yet,
