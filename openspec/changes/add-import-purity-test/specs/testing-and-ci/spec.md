@@ -14,6 +14,12 @@ The check SHALL distinguish AiiDA itself from distributions whose names merely
 begin with the same letters, so that this package's own modules are not mistaken
 for AiiDA.
 
+When the check fails, it SHALL report enough to locate the cause without
+re-running anything: which AiiDA module was loaded, and the chain of imports
+that led to it, identified by source location. Reporting only that AiiDA was
+loaded SHALL NOT satisfy this requirement, because the import that breaks the
+contract is typically several modules away from the operations themselves.
+
 #### Scenario: The contract is checked where AiiDA is absent
 
 - **WHEN** the independence check runs
@@ -25,6 +31,20 @@ for AiiDA.
 - **WHEN** any module reachable from the operations' import chain begins to
   import AiiDA
 - **THEN** the suite fails, identifying that AiiDA was loaded
+
+#### Scenario: A failure names the imports that led to AiiDA
+
+- **WHEN** the check fails because a module several hops from the operations
+  imports AiiDA
+- **THEN** the failure names the AiiDA module and the source location of each
+  import between the operations and that module
+
+#### Scenario: The check reports its own failures distinguishably
+
+- **WHEN** the separate interpreter fails for a reason other than a contract
+  violation
+- **THEN** the suite fails with that interpreter's own error output, rather than
+  reporting a contract violation
 
 #### Scenario: The package's own modules are not mistaken for AiiDA
 

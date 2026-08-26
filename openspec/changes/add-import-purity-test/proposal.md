@@ -25,9 +25,15 @@ current test runs, AiiDA is loaded regardless of what `operations.py` does.
   - importing the operations module loads no AiiDA module;
   - an operation called directly returns its Euphonic result with no AiiDA
     profile present.
+- Report violations as evidence rather than a verdict: name the AiiDA module
+  that was loaded and the chain of imports that reached it, since the offending
+  import is usually in a transitive dependency rather than in the operations.
 - Add a requirement to `testing-and-ci` recording that this contract must be
-  verified out-of-process. Without that constraint, a later simplification to an
-  in-process assertion would leave a test that passes unconditionally.
+  verified out-of-process, and that a failure must name the import chain.
+  Without the first constraint, a later simplification to an in-process
+  assertion would leave a test that passes unconditionally; without the second,
+  a failure would say only that AiiDA was loaded, leaving the cause to be
+  rediscovered by hand.
 
 ## Capabilities
 
@@ -39,7 +45,8 @@ current test runs, AiiDA is loaded regardless of what `operations.py` does.
 
 - `testing-and-ci`: add a requirement that the AiiDA-independence contract is
   verified in a subprocess which has not itself imported or configured AiiDA, so
-  the check cannot be satisfied vacuously by the test session's own state.
+  the check cannot be satisfied vacuously by the test session's own state, and
+  that a failure identifies the import chain that reached AiiDA.
 
 *(`phonon-operations` is deliberately unchanged: its requirement and both of its
 scenarios already state the contract correctly. This change implements them.)*
