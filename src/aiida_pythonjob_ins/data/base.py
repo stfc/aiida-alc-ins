@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any, ClassVar, Self
+from typing import Any, ClassVar
+
+from typing_extensions import Self
 
 from aiida.orm import Data
 
