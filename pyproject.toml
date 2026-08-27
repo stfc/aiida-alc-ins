@@ -14,7 +14,7 @@ version = "0.1.0"
 description = "Proof-of-concept AiiDA plugin wrapping INS Python libraries (Euphonic first) via aiida-pythonjob."
 readme = "README.md"
 # Relaxed to >=3.11 for Python version compatibility (local aarch64 wheel needs cp312)
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
 # Bounds reflect *our own* API usage, not sibling dependencies' constraints (the
@@ -50,13 +50,17 @@ dependencies = [
     # https://github.com/isisneutronmuon/abINS_lib -- alpha ("Development Status
     # :: 3 - Alpha") with the 0.2 release decoupling cross-section weighting into
     # an explicit `apply_weights` function. Pinned to the tested 0.2.x series.
-    "abinslib~=0.2.0",
+    # For Python 3.10, use the py310-0.2 branch from GitHub; for 3.11+, use PyPI.
+    "abinslib @ git+https://github.com/ISISNeutronMuon/abINS_lib@py310-0.2 ; python_version == '3.10'",
+    "abinslib~=0.2.0 ; python_version >= '3.11'",    
     # resins: instrument resolution functions (e.g. TOSCA's energy-dependent
     # broadening). https://github.com/pace-neutrons/resins -- pre-1.0; its own
     # README advises pinning to a specific minor version. abinslib 0.2 requires
     # resins~=0.1, so the resolver enforces compatibility regardless of what we
     # declare here.
     "resins~=0.1.0",
+    # typing-extensions: backported typing features for Python 3.10 compatibility
+    "typing-extensions>=4.0.0",
 ]
 
 [dependency-groups]
@@ -105,6 +109,7 @@ testpaths = ["tests"]
 [tool.ruff]
 line-length = 88
 src = ["src", "tests"]
+target-version = "py310"
 
 [tool.ruff.lint]
 # A broad, exemplar-quality rule set modelled on Euphonic's selection

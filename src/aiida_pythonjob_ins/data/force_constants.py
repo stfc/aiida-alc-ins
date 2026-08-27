@@ -9,7 +9,9 @@ https://euphonic.readthedocs.io/en/stable/force-constants.html
 from __future__ import annotations
 
 from pathlib import Path
-from typing import ClassVar, Self
+from typing import ClassVar
+
+from typing_extensions import Self
 
 from euphonic import ForceConstants
 
