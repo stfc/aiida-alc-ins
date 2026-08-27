@@ -11,9 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import ClassVar
 
-from typing_extensions import Self
-
 from euphonic import ForceConstants
+from typing_extensions import Self
 
 from .base import EuphonicJSONData
 from .mixins import CrystalStructureMixin
