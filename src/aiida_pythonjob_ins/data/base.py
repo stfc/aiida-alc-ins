@@ -19,9 +19,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, ClassVar
 
-from typing_extensions import Self
-
 from aiida.orm import Data
+from typing_extensions import Self
 
 
 class EuphonicJSONData(Data):
