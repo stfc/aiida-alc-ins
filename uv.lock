@@ -27,7 +27,7 @@ wheels = [
 [[package]]
 name = "abinslib"
 version = "0.1.0.post1"
-source = { git = "https://github.com/ISISNeutronMuon/abINS_lib?rev=py310#73485cd82c2f90c5848e53c544628c1ac5eedab8" }
+source = { git = "https://github.com/ISISNeutronMuon/abINS_lib?rev=py310-0.1#49870bf223a219e6ebc63036cd8d530574fdb9ba" }
 resolution-markers = [
     "python_full_version < '3.11'",
 ]
@@ -114,7 +114,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "abinslib", version = "0.1.0.post1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "abinslib", version = "0.1.0.post1", source = { git = "https://github.com/ISISNeutronMuon/abINS_lib?rev=py310#73485cd82c2f90c5848e53c544628c1ac5eedab8" }, marker = "python_full_version < '3.11'" },
+    { name = "abinslib", version = "0.1.0.post1", source = { git = "https://github.com/ISISNeutronMuon/abINS_lib?rev=py310-0.1#49870bf223a219e6ebc63036cd8d530574fdb9ba" }, marker = "python_full_version < '3.11'" },
     { name = "aiida-core" },
     { name = "aiida-pythonjob" },
     { name = "euphonic", extra = ["phonopy-reader"] },
@@ -145,7 +145,7 @@ doc = [
 
 [package.metadata]
 requires-dist = [
-    { name = "abinslib", marker = "python_full_version == '3.10.*'", git = "https://github.com/ISISNeutronMuon/abINS_lib?rev=py310" },
+    { name = "abinslib", marker = "python_full_version == '3.10.*'", git = "https://github.com/ISISNeutronMuon/abINS_lib?rev=py310-0.1" },
     { name = "abinslib", marker = "python_full_version >= '3.11'", specifier = "==0.1.*" },
     { name = "aiida-core", specifier = ">=2.6,<3" },
     { name = "aiida-pythonjob", specifier = "~=0.5.2" },
