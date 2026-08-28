@@ -41,7 +41,7 @@ code = get_python_code()
 #
 #    ``q_spacing`` here is deliberately coarse -- a 3x3x3 grid, far coarser than
 #    the :doc:`density-of-states example <plot_dos>` uses on the same crystal --
-#    purely to keep this page's build time down. ``abinslib`` 0.1's
+#    purely to keep this page's build time down. ``abinslib``
 #    combination-mode routine costs O(N^2) in the number of q-points (it
 #    accumulates spectra by repeated addition, revalidating every previously
 #    accumulated line each time), so a converged mesh would take tens of minutes

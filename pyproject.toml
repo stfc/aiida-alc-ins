@@ -48,16 +48,14 @@ dependencies = [
     # abinslib: almost-isotropic incoherent INS intensities (fundamentals +
     # Mantid/AbINS-style combination modes) from Euphonic QpointPhononModes.
     # https://github.com/isisneutronmuon/abINS_lib -- alpha ("Development Status
-    # :: 3 - Alpha") with an announced API change already on its `main` branch
-    # (`apply_cross_section` -> `apply_weights`), so pinned to the tested 0.1
-    # release rather than the wider bounds this project otherwise prefers. See
-    # Decision 11 in openspec/changes/abinslib-workflow/design.md.
-    "abinslib==0.1.*",
+    # :: 3 - Alpha") with the 0.2 release decoupling cross-section weighting into
+    # an explicit `apply_weights` function. Pinned to the tested 0.2.x series.
+    "abinslib~=0.2.0",
     # resins: instrument resolution functions (e.g. TOSCA's energy-dependent
     # broadening). https://github.com/pace-neutrons/resins -- pre-1.0; its own
-    # README advises pinning to a specific minor version, and abinslib 0.1
-    # already requires resins==0.1.0 exactly, so the resolver enforces this
-    # regardless of what we declare. See Decision 11 in design.md.
+    # README advises pinning to a specific minor version. abinslib 0.2 requires
+    # resins~=0.1, so the resolver enforces compatibility regardless of what we
+    # declare here.
     "resins~=0.1.0",
 ]
 

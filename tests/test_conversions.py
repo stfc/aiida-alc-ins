@@ -227,11 +227,18 @@ def test_spectrum_collection_labels_are_readable(aiida_profile, ethanol_modes_js
 
     by_symbol = spectrum.group_by("atom_symbol")
     labels = spectrum_collection_labels(by_symbol)
-    assert set(labels) == {"C", "O", "H"}
+    # Mass metadata is included in labels when it varies, supporting
+    # isotopic substitution systems where mass distinguishes isotopes
+    assert set(labels) == {"C (12.0107)", "H (1.00794)", "O (15.999400000000003)"}
 
     by_order = spectrum.group_by("quantum_order")
     order_labels = spectrum_collection_labels(by_order)
-    assert order_labels == ["Order 1", "Order 2"]
+    # The 'method' metadata describes the scattering approach and varies
+    # between fundamentals (order 1) and combinations (order 2)
+    assert order_labels == [
+        "Order 1, almost-isotropic incoherent",
+        "Order 2, almost-isotropic incoherent approximation",
+    ]
 
     # Grouped down to one line: nothing left varies, so it reads as a total
     # rather than repeating metadata that is now common to everything.
