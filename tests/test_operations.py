@@ -15,6 +15,7 @@ from abinslib.almost_isotropic_incoherent import (
     mantid_like_combination_spectra,
 )
 from abinslib.displacements import Displacements
+from abinslib.util import apply_weights
 from aiida.engine import run_get_node
 from aiida.orm import XyData
 from aiida_pythonjob import PythonJob
@@ -332,9 +333,10 @@ def test_calculate_tosca_spectrum_matches_direct_abinslib_call(ethanol_modes):
     combinations = mantid_like_combination_spectra(
         ethanol_modes, mode_displacements, atomic_displacements, combination_q2, bins
     )
-    # Collapse the q-point duplicates upstream leaves behind -- see the comment in
-    # calculate_tosca_spectrum.
-    expected = (fundamentals + combinations).group_by("atom_index", "quantum_order")
+    # Apply cross-section weights then group.
+    raw_bank = fundamentals + combinations
+    weighted_bank = apply_weights(raw_bank, key="scattering_cross_section")
+    expected = weighted_bank.group_by("atom_index", "quantum_order")
 
     np.testing.assert_allclose(actual.y_data.magnitude, expected.y_data.magnitude)
 
@@ -347,23 +349,32 @@ def test_calculate_tosca_spectrum_default_banks_are_both_present(ethanol_modes):
 
 
 def test_calculate_tosca_spectrum_lines_carry_order_and_symbol(ethanol_modes):
-    """Every line is labelled with its quantum order and contributing atom."""
+    """Every line is labelled with its quantum order, atom symbol and mass."""
     spectrum = calculate_tosca_spectrum(
         ethanol_modes, detector_angles=[135.0], energy_spacing=50.0
     )
     orders = {line["quantum_order"] for line in spectrum.metadata["line_data"]}
     symbols = {line["atom_symbol"] for line in spectrum.metadata["line_data"]}
+    # Mass metadata is present on each line
+    masses = {line["mass"] for line in spectrum.metadata["line_data"]}
     assert orders == {1, 2}
     assert symbols == {"C", "O", "H"}
+    assert len(masses) > 0  # mass metadata is present
+
+
+def test_calculate_tosca_spectrum_has_barn_units(ethanol_modes):
+    """Cross-section weighted intensities have units of barn * cm."""
+    spectrum = calculate_tosca_spectrum(ethanol_modes, energy_spacing=50.0)
+    # apply_weights produces physical cross-section-weighted units
+    assert "barn" in str(spectrum.y_data.units)
 
 
 def test_calculate_tosca_spectrum_collapses_only_the_qpoint_dimension(ethanol_modes):
     """q-point duplicates are merged; every other distinction is preserved.
 
-    abinslib 0.1 returns combination-mode lines resolved per q-point (its own
-    `group_by("atom_index")` result is discarded), which would otherwise
-    multiply the committed y arrays by the q-point count and leak a `qpt` key
-    into every plot label.
+    abinslib's combination-mode routine returns lines resolved per q-point,
+    which would otherwise multiply the committed y arrays by the q-point count
+    and leak a `qpt` key into every plot label.
     """
     spectrum = calculate_tosca_spectrum(ethanol_modes, energy_spacing=20.0)
     line_data = spectrum.metadata["line_data"]

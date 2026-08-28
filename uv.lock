@@ -8,15 +8,15 @@ resolution-markers = [
 
 [[package]]
 name = "abinslib"
-version = "0.1.0.post1"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "euphonic" },
     { name = "resins" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/bc/b314ee7b44c20c439919b2ab58ed634a7cad1340cc49273b1d758073d01b/abinslib-0.1.0.post1.tar.gz", hash = "sha256:85821d89ffdf9baa11ab6b7c0ae66b9bb5a93cfaf65485dd2a3ded5afe2874fe", size = 29599, upload-time = "2026-07-20T10:41:42.016Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7a/68/f1336e1441cf3b44431fbbe5197416150c48fe474aadac1eb3c6edadb0a4/abinslib-0.2.0.tar.gz", hash = "sha256:885692d7a44c64d5bd2a0e6f2f33e8392d364615af2e7ff01ab55acafe722451", size = 37093, upload-time = "2026-08-28T14:56:24.125Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2e/3d/1759d6ccb59121b2d1cb5573ece9b832038899b8b19244c0267d9a372407/abinslib-0.1.0.post1-py3-none-any.whl", hash = "sha256:53405d65528958190e5e28bc0967701d4f4863a9e55783bd62f903c9e8fa6589", size = 26183, upload-time = "2026-07-20T10:41:40.932Z" },
+    { url = "https://files.pythonhosted.org/packages/db/dd/0a84d26f4edd0febb123eea3bcb0dd04999d9c57914fd01fc1b928605594/abinslib-0.2.0-py3-none-any.whl", hash = "sha256:f31820632f209501577c7b2ca752ec810dab5eb520afed2c704897f27c5d94f9", size = 31375, upload-time = "2026-08-28T14:56:22.848Z" },
 ]
 
 [[package]]
@@ -119,7 +119,7 @@ doc = [
 
 [package.metadata]
 requires-dist = [
-    { name = "abinslib", specifier = "==0.1.*" },
+    { name = "abinslib", specifier = "~=0.2.0" },
     { name = "aiida-core", specifier = ">=2.6,<3" },
     { name = "aiida-pythonjob", specifier = "~=0.5.2" },
     { name = "euphonic", extras = ["phonopy-reader"], specifier = "~=2.0" },

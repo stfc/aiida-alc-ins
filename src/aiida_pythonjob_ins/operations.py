@@ -39,7 +39,7 @@ from abinslib.almost_isotropic_incoherent import (
     mantid_like_combination_spectra,
 )
 from abinslib.displacements import Displacements
-from abinslib.util import calculate_indirect_q2
+from abinslib.util import apply_weights, calculate_indirect_q2
 from euphonic import (
     ForceConstants,
     QpointPhononModes,
@@ -310,11 +310,12 @@ def calculate_dos(
 # are plain, AiiDA-free functions using only public APIs; see the reference
 # pipeline (abINS_lib's TOSCA tutorial) cited in
 # openspec/changes/abinslib-workflow/design.md for the calculation this mirrors.
-# Coded against the installed `abinslib==0.1.*` release, not its `main` branch:
-# 0.1's `calculate_almost_isotropic_incoherent_spectra` takes
-# `apply_cross_section` (default `True`, applying incoherent+coherent
-# cross-sections in one step); `main` has replaced this with a separate
-# `apply_weights` call that 0.1 does not provide.
+#
+# abinslib decouples cross-section weighting from intensity calculations:
+# `calculate_almost_isotropic_incoherent_spectra` and
+# `mantid_like_combination_spectra` return unweighted spectra, and callers
+# must explicitly invoke `apply_weights` to scale intensities by neutron
+# scattering cross sections (producing physical `barn * cm` units).
 
 
 def calculate_thermal_displacements(
@@ -508,6 +509,11 @@ def calculate_tosca_spectrum(
     order and detector angle -- mirroring the reference pipeline's
     ``fundamentals + second_order`` sum, repeated per bank.
 
+    Cross-section weighting is applied explicitly via ``apply_weights`` to the
+    raw (fundamentals + combinations) collection before grouping, producing
+    physical intensities in cross-section-weighted units (``barn * cm`` or
+    ``barn / energy``).
+
     Parameters
     ----------
     modes
@@ -533,7 +539,9 @@ def calculate_tosca_spectrum(
     Spectrum1DCollection
         One line per (atom, quantum order, detector angle), each carrying that
         triple in its ``line_data`` metadata under ``atom_symbol``,
-        ``quantum_order`` and ``detector_angle``. Not yet grouped or broadened.
+        ``quantum_order`` and ``detector_angle``. Intensities are cross-section
+        weighted with units of ``barn * cm`` (or ``barn / energy``). Not yet
+        grouped or broadened.
     """
     if detector_angles is None:
         detector_angles = [135.0, 45.0]
@@ -574,28 +582,19 @@ def calculate_tosca_spectrum(
             modes, mode_displacements, atomic_displacements, combination_q2, bins
         )
 
-        # Collapse the q-point dimension. abinslib 0.1's
-        # mantid_like_combination_spectra calls `spectra.group_by("atom_index")`
-        # for its own documented purpose ("combine q-point contributions") but
-        # discards the result rather than returning it (group_by returns a new
-        # collection; it does not mutate in place), so it hands back one line per
-        # atom *per q-point*, still carrying a `qpt` key.
+        # Apply cross-section weights before grouping. The raw
+        # (fundamentals + combinations) collection carries `atom_symbol` and
+        # `mass` metadata from `iter_atom_info(modes.crystal)`, which
+        # `apply_weights` uses to scale intensities by the corresponding
+        # neutron scattering cross sections.
         #
-        # That is numerically harmless to a caller that regroups or sums -- which
-        # abinslib's own TOSCA example does, so it is not visibly broken there.
-        # We cannot ignore it: `components` is committed to the provenance graph
-        # with one line per atom, quantum order and detector bank, so the
-        # duplicates would multiply the stored y arrays by the q-point count and
-        # make `qpt` a varying key in every plot label.
-        #
-        # Grouping on (atom_index, quantum_order) -- the full set of keys that
-        # identifies a line at this stage -- merges the q-point duplicates and
-        # nothing else. Grouping on atom_index alone would give the same answer
-        # today, but would silently sum across orders should a future abinslib
-        # return more than one order in a single collection.
-        bank_spectrum = (fundamentals + combinations).group_by(
-            "atom_index", "quantum_order"
-        )
+        # Grouping on (atom_index, quantum_order) merges q-point duplicates.
+        # Grouping on atom_index alone would give the same answer today, but
+        # would silently sum across orders should abinslib ever return more than
+        # one order in a single collection.
+        raw_bank = fundamentals + combinations
+        weighted_bank = apply_weights(raw_bank, key="scattering_cross_section")
+        bank_spectrum = weighted_bank.group_by("atom_index", "quantum_order")
         for line_data in bank_spectrum.metadata["line_data"]:
             line_data["detector_angle"] = detector_angle
         per_bank_spectra.append(bank_spectrum)
