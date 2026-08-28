@@ -52,8 +52,8 @@ dependencies = [
     # (`apply_cross_section` -> `apply_weights`), so pinned to the tested 0.1
     # release rather than the wider bounds this project otherwise prefers. See
     # Decision 11 in openspec/changes/abinslib-workflow/design.md.
-    # For Python 3.10, use the py310 branch from GitHub; for 3.11+, use PyPI.
-    "abinslib @ git+https://github.com/ISISNeutronMuon/abINS_lib@py310 ; python_version == '3.10'",
+    # For Python 3.10, use the py310-0.1 branch from GitHub; for 3.11+, use PyPI.
+    "abinslib @ git+https://github.com/ISISNeutronMuon/abINS_lib@py310-0.1 ; python_version == '3.10'",
     "abinslib==0.1.* ; python_version >= '3.11'",
     # resins: instrument resolution functions (e.g. TOSCA's energy-dependent
     # broadening). https://github.com/pace-neutrons/resins -- pre-1.0; its own
