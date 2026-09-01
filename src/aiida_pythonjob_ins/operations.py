@@ -588,10 +588,10 @@ def calculate_tosca_spectrum(
         # `apply_weights` uses to scale intensities by the corresponding
         # neutron scattering cross sections.
         #
-        # Grouping on (atom_index, quantum_order) merges q-point duplicates.
-        # Grouping on atom_index alone would give the same answer today, but
-        # would silently sum across orders should abinslib ever return more than
-        # one order in a single collection.
+        # Grouping on (atom_index, quantum_order) merges q-point duplicates
+        # while keeping fundamentals (order 1) and combinations (order 2+)
+        # separate. Grouping on atom_index alone would incorrectly sum across
+        # quantum orders.
         raw_bank = fundamentals + combinations
         weighted_bank = apply_weights(raw_bank, key="scattering_cross_section")
         bank_spectrum = weighted_bank.group_by("atom_index", "quantum_order")
