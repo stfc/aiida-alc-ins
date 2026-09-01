@@ -584,9 +584,9 @@ def calculate_tosca_spectrum(
 
         # Apply cross-section weights before grouping. The raw
         # (fundamentals + combinations) collection carries `atom_symbol` and
-        # `mass` metadata from `iter_atom_info(modes.crystal)`, which
-        # `apply_weights` uses to scale intensities by the corresponding
-        # neutron scattering cross sections.
+        # `mass` metadata from the crystal structure, which `apply_weights`
+        # uses to scale intensities by the corresponding neutron scattering
+        # cross sections.
         #
         # Grouping on (atom_index, quantum_order) merges q-point duplicates
         # while keeping fundamentals (order 1) and combinations (order 2+)
