@@ -60,6 +60,7 @@ def find_free_port() -> int:
         s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
 
+
 class SlurmContainer:
     """Manages an ephemeral Slurm container built from tests/container/Dockerfile."""
 
