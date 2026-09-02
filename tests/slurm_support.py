@@ -164,10 +164,7 @@ class SlurmContainer:
                     _, stdout, _ = ssh.exec_command("sinfo -h -o %T")
                     out = stdout.read().decode()
                     if any(s in out for s in ("idle", "alloc")):
-                        cmd = (
-                            "uv pip install "
-                            "--python /home/ubuntu/venv -e /workspace"
-                        )
+                        cmd = "uv pip install --python /home/ubuntu/venv -e /workspace"
                         _, _, stderr = ssh.exec_command(cmd)
                         exit_status = stderr.channel.recv_exit_status()
                         if exit_status == 0:
