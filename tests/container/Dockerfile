@@ -57,7 +57,7 @@ RUN pip install --no-cache-dir uv && \
         'aiida-pythonjob~=0.5.2' \
         'euphonic[phonopy-reader]~=2.0' \
         'seekpath>=2.2.1,<3' \
-        'abinslib==0.1.*' \
+        'abinslib==0.2.*' \
         'resins~=0.1.0'"
 
 # 5. Pre-bake authorized SSH key
