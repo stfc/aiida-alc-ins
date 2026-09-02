@@ -35,10 +35,23 @@ def detect_container_engine() -> str | None:
 
 
 def ensure_container_image(engine: str, project_root: Path) -> str:
-    """Ensure the local Slurm test container image is built."""
-    container_dir = project_root / "tests" / "container"
+    """Ensure the local Slurm test container image is built.
+
+    The build context is the project root, allowing the Dockerfile to COPY
+    pyproject.toml and wheels/ directly. The Dockerfile path is passed
+    explicitly via -f, making COPY sources relative to tests/container/.
+    """
+    dockerfile_path = project_root / "tests" / "container" / "Dockerfile"
     res = subprocess.run(
-        [engine, "build", "-t", LOCAL_IMAGE_TAG, str(container_dir)],
+        [
+            engine,
+            "build",
+            "-t",
+            LOCAL_IMAGE_TAG,
+            "-f",
+            str(dockerfile_path),
+            str(project_root),
+        ],
         capture_output=True,
         text=True,
         check=False,
