@@ -229,7 +229,7 @@ def test_spectrum_collection_labels_are_readable(aiida_profile, ethanol_modes_js
     labels = spectrum_collection_labels(by_symbol)
     # Mass metadata is included in labels when it varies, supporting
     # isotopic substitution systems where mass distinguishes isotopes
-    assert set(labels) == {"C (12.0107)", "H (1.00794)", "O (15.999400000000003)"}
+    assert set(labels) == {"C (12.0107)", "H (1.00794)", "O (15.9994)"}
 
     by_order = spectrum.group_by("quantum_order")
     order_labels = spectrum_collection_labels(by_order)

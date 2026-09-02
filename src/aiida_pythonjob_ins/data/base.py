@@ -17,9 +17,10 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
-from typing import Any, ClassVar, Self
+from typing import Any, ClassVar
 
 from aiida.orm import Data
+from typing_extensions import Self
 
 
 class EuphonicJSONData(Data):

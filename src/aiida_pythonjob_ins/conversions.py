@@ -138,6 +138,9 @@ def _format_label_value(key: str, value: Any) -> str:
         return f"order {value}"
     if key == "detector_angle":
         return f"{value}\N{DEGREE SIGN}"
+    if key == "mass":
+        # Round to avoid floating-point noise in label display
+        return f"{float(value):.6g}"
     return str(value)
 
 

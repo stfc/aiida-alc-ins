@@ -8,10 +8,11 @@ https://euphonic.readthedocs.io/en/stable/
 
 from __future__ import annotations
 
-from typing import ClassVar, Self
+from typing import ClassVar
 
 from aiida.orm import StructureData
 from euphonic import Crystal
+from typing_extensions import Self
 
 from aiida_pythonjob_ins.conversions import (
     crystal_to_structure,
