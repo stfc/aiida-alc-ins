@@ -7,10 +7,9 @@ CPUS=$(nproc 2>/dev/null || echo 1)
 sed -i "s/<<HOSTNAME>>/${HOST}/g" /etc/slurm/slurm.conf
 sed -i "s/<<CPU>>/${CPUS}/g" /etc/slurm/slurm.conf
 
-# Ensure runtime and log directories exist with public read permissions for diagnostics
+# Ensure runtime and log directories exist; world-readable logs for test diagnostics
 mkdir -p /var/run/sshd /run/sshd /tmp/aiida_run /var/log/slurm /var/spool/slurmctld /var/spool/slurmd
 touch /var/log/slurm/slurmctld.log /var/log/slurm/slurmd.log
-chmod 0755 /var/run/sshd /run/sshd /var/log/slurm
 chmod 0644 /var/log/slurm/*.log
 
 echo "[slurm-container] Starting Slurm & Munge daemons..."
