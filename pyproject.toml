@@ -58,7 +58,8 @@ dependencies = [
     # README advises pinning to a specific minor version. abinslib 0.2 requires
     # resins~=0.1, so the resolver enforces compatibility regardless of what we
     # declare here.
-    "resins~=0.1.0",
+    "resins @ git+https://github.com/pace-neutrons/resins@py310 ; python_version == '3.10'",
+    "resins ~= 0.1.0 ; python_version >= '3.11'",
     # typing-extensions: backported typing features for Python 3.10 compatibility
     "typing-extensions>=4.0.0",
 ]
