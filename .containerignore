@@ -1,0 +1,18 @@
+# Allowlist for container build context
+# Only include what the build needs, excluding everything else.
+# This prevents the 526 MB project root (including .venv, docs, etc.)
+# from being transferred to the build context.
+#
+# Last-matching-line-wins: `*` excludes all, then `!` re-includes specific paths.
+
+# Exclude everything by default
+*
+
+# Re-include what the build needs
+!pyproject.toml
+!wheels
+!tests
+
+# Re-include tests/container specifically (need to walk down the tree)
+tests/*
+!tests/container

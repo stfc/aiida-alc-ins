@@ -63,6 +63,7 @@ dependencies = [
 # Dev/test tooling (PEP 735 group; installed by `uv sync`).
 dev = [
     "pytest>=8",
+    "pytest-timeout>=2.3",
     "ruff>=0.10",
 ]
 
@@ -101,6 +102,17 @@ find-links = ["wheels"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
+markers = [
+    "containerized: integration tests requiring a local or CI container runtime (podman/docker)",
+]
+filterwarnings = [
+    "ignore:Creating AiiDA configuration folder:UserWarning",
+    "ignore:invalid escape sequence:SyntaxWarning",
+    "ignore:There is no current event loop:DeprecationWarning:plumpy",
+    "ignore:Object of type .* not in session:sqlalchemy.exc.SAWarning",
+    "ignore:Set OLD_ERROR_HANDLING to false:DeprecationWarning:spglib",
+]
 
 [tool.ruff]
 line-length = 88
@@ -163,6 +175,8 @@ ignore = [
     "ARG",     # pytest fixtures are passed as args but not always referenced
     "INP001",  # tests/ is intentionally not an importable package
     "S101",    # "assert" is a core part of pytest workflow
+    "S108",    # hardcoded /tmp path in test container configuration
+    "S603",    # subprocess calls in container helper module
 ]
 # Sphinx config: not a package; profile bootstrap runs before imports; event
 # handlers have fixed signatures with unused args.

@@ -148,3 +148,139 @@ test, rather than importing the classes directly.
 - **THEN** they resolve the plugins without storing a node, submitting a job or
   requiring any service beyond the test session's own configuration
 
+### Requirement: Containerized Slurm integration tests execute remote jobs
+
+The test suite SHALL provide an integration test setup that launches an ephemeral Slurm container running an SSH daemon, configures an AiiDA `Computer` using `core.ssh` transport and `core.slurm` scheduler, and executes end-to-end AiiDA workflows or `PythonJob` tasks against the containerized Slurm queue.
+
+#### Scenario: Running a workflow on a containerized Slurm computer
+
+- **WHEN** an integration test is run with an available container runtime
+- **THEN** the test submits a workflow to the containerized Slurm queue over SSH, polls to completion, and receives valid results and provenance links
+
+#### Scenario: SSH connection is bound strictly to local loopback
+
+- **WHEN** the Slurm container is started by the test fixture
+- **THEN** its SSH port is published exclusively on `127.0.0.1` at a dynamically assigned local port
+
+### Requirement: Integration tests auto-skip when container runtimes are unavailable
+
+The suite SHALL auto-detect whether a supported container engine (`podman` or `docker`) is installed and operational. If no container engine is available, or if containerized tests are explicitly deselected via Pytest marker filtering, containerized tests SHALL be skipped cleanly without causing test suite failure.
+
+#### Scenario: Running tests when no container engine is installed
+
+- **WHEN** the test suite runs in an environment lacking `podman` and `docker`
+- **THEN** containerized integration tests are skipped with a clear skip message
+
+#### Scenario: Running tests with containerized marker deselection
+
+- **WHEN** the test suite is executed with `pytest -m "not containerized"`
+- **THEN** containerized integration tests are deselected during collection
+
+### Requirement: Containerized integration tests are registered with a Pytest marker
+
+The project SHALL register the `containerized` Pytest marker in `pyproject.toml` so that developers can selectively run or deselect containerized integration tests using standard `pytest` marker selection options.
+
+#### Scenario: Running only containerized tests
+
+- **WHEN** the test suite is executed with `pytest -m containerized`
+- **THEN** only tests marked as `containerized` are executed
+
+### Requirement: The containerized test environment derives its dependencies from the project's declared configuration
+
+The environment in which containerized integration tests execute remote jobs
+SHALL obtain its dependency versions from the project's declared runtime
+dependencies. It SHALL NOT carry a second, independently maintained statement
+of those versions, because two statements of the same fact can disagree and
+nothing would detect that they had.
+
+A change to the declared dependencies SHALL take effect in that environment on
+the next run of the containerized tests, with no accompanying edit elsewhere
+and no manual intervention to discard a previously built environment.
+
+#### Scenario: A declared dependency constraint is changed
+
+- **WHEN** a runtime dependency's declared version constraint is changed, and
+  the containerized tests are then run on a machine that had already built the
+  environment under the previous constraint
+- **THEN** the environment the remote jobs execute in holds a version
+  satisfying the new constraint
+
+#### Scenario: The declared dependencies are the only place a version is stated
+
+- **WHEN** the containerized test environment's definition is inspected for the
+  versions of the project's runtime dependencies
+- **THEN** no version or version constraint for any of them is stated there,
+  each being taken from the project's declared configuration instead
+
+#### Scenario: A job function importing a changed dependency runs remotely
+
+- **WHEN** a job function is shipped to the containerized environment by module
+  reference, and its import chain uses an interface introduced by a change to
+  the project's declared dependencies
+- **THEN** the function is imported and executed successfully, rather than
+  failing to import
+
+#### Scenario: An environment-only change is not silently ignored
+
+- **WHEN** the declared dependencies change but nothing else about the
+  containerized test setup does
+- **THEN** the previously built environment is not reused unchanged
+
+### Requirement: AiiDA independence is verified out of process
+
+The suite SHALL verify the operations' independence from AiiDA in a separate
+interpreter that has neither imported AiiDA nor been given an AiiDA
+configuration location, so the result reflects only what importing and calling
+the operations causes. An in-session check SHALL NOT be treated as satisfying
+this requirement, because the test session imports and configures AiiDA before
+any test runs and would report success regardless of the operations' own
+imports.
+
+The check SHALL distinguish AiiDA itself from distributions whose names merely
+begin with the same letters, so that this package's own modules are not mistaken
+for AiiDA.
+
+When the check fails, it SHALL report enough to locate the cause without
+re-running anything: which AiiDA module was loaded, and the chain of imports
+that led to it, identified by source location. Reporting only that AiiDA was
+loaded SHALL NOT satisfy this requirement, because the import that breaks the
+contract is typically several modules away from the operations themselves.
+
+#### Scenario: The contract is checked where AiiDA is absent
+
+- **WHEN** the independence check runs
+- **THEN** it evaluates the operations in an interpreter in which AiiDA has not
+  already been imported and no AiiDA configuration location has been supplied
+
+#### Scenario: An import of AiiDA anywhere in the chain is detected
+
+- **WHEN** any module reachable from the operations' import chain begins to
+  import AiiDA
+- **THEN** the suite fails, identifying that AiiDA was loaded
+
+#### Scenario: A failure names the imports that led to AiiDA
+
+- **WHEN** the check fails because a module several hops from the operations
+  imports AiiDA
+- **THEN** the failure names the AiiDA module and the source location of each
+  import between the operations and that module
+
+#### Scenario: The check reports its own failures distinguishably
+
+- **WHEN** the separate interpreter fails for a reason other than a contract
+  violation
+- **THEN** the suite fails with that interpreter's own error output, rather than
+  reporting a contract violation
+
+#### Scenario: The package's own modules are not mistaken for AiiDA
+
+- **WHEN** the check inspects which modules were loaded
+- **THEN** modules belonging to this package are not reported as AiiDA, and the
+  check passes while the contract holds
+
+#### Scenario: Calling an operation does not introduce a dependency on AiiDA
+
+- **WHEN** an operation is called in that same interpreter
+- **THEN** it returns its result, and no AiiDA module has been loaded as a
+  consequence
+
