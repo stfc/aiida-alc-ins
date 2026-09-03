@@ -17,25 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 2. Complete, standalone SSH daemon configuration
-RUN mkdir -p /var/run/sshd /run/sshd /etc/ssh && \
-    cat <<'EOF' > /etc/ssh/sshd_config
-Port 22
-HostKey /etc/ssh/ssh_host_rsa_key
-HostKey /etc/ssh/ssh_host_ecdsa_key
-HostKey /etc/ssh/ssh_host_ed25519_key
-
-PubkeyAuthentication yes
-AuthorizedKeysFile .ssh/authorized_keys
-PasswordAuthentication no
-KbdInteractiveAuthentication no
-UsePAM no
-X11Forwarding no
-PrintMotd no
-PrintLastLog no
-AcceptEnv LANG LC_*
-Subsystem sftp internal-sftp
-StrictModes no
-EOF
+RUN mkdir -p /var/run/sshd /run/sshd /etc/ssh
+COPY tests/container/sshd_config /etc/ssh/sshd_config
 
 # 3. Pre-generate SSH host keys & munge key
 RUN ssh-keygen -A && \
