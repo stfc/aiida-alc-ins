@@ -9,12 +9,71 @@ https://aiida.readthedocs.io/projects/aiida-core/en/stable/topics/plugins.html#t
 
 from __future__ import annotations
 
+import importlib.util
 import os
+import subprocess
 import sys
 import tempfile
+import tomllib
+import venv
 from pathlib import Path
 
 import pytest
+
+# -----------------------------------------------------------------------------
+# Child environment builder for venv_code tests
+# -----------------------------------------------------------------------------
+
+
+class AiiDAFreeEnvBuilder(venv.EnvBuilder):
+    """A venv.EnvBuilder that creates an AiiDA-free child environment.
+
+    Creates a virtual environment, installs the project into it (non-editable),
+    then uninstalls aiida-core and aiida-pythonjob to ensure the child
+    interpreter has no AiiDA available.
+
+    The child interpreter path is available via the `env_exe` attribute after
+    creation.
+
+    See design.md Decision 3 and Decision 4 for rationale.
+    """
+
+    def __init__(self, project_root: Path, find_links: list[str] | None = None) -> None:
+        """Initialize the builder.
+
+        Args:
+            project_root: Path to the project root (for pip install .)
+            find_links: Optional list of --find-links directories for wheels
+        """
+        super().__init__(with_pip=True, symlinks=True)
+        self.project_root = project_root
+        self.find_links = find_links or []
+        self.env_exe: Path | None = None
+
+    def post_setup(self, context: venv.SimpleNamespace) -> None:
+        """Hook called after environment creation.
+
+        Captures the child interpreter path and installs the project.
+        """
+        self.env_exe = Path(context.env_exe)
+
+
+def get_find_links_from_pyproject(pyproject_path: Path) -> list[str]:
+    """Read [tool.uv] find-links from pyproject.toml.
+
+    Args:
+        pyproject_path: Path to pyproject.toml
+
+    Returns:
+        List of find-links directories (empty if not present)
+    """
+    try:
+        with pyproject_path.open("rb") as f:
+            data = tomllib.load(f)
+        return data.get("tool", {}).get("uv", {}).get("find-links", [])
+    except (FileNotFoundError, KeyError):
+        return []
+
 
 # Redirect AiiDA's configuration to an ephemeral, pytest-owned directory so the
 # test session is hermetic: a developer's real, live ``~/.aiida`` (profiles,
@@ -172,3 +231,173 @@ def slurm_python_code(slurm_computer: Computer) -> InstalledCode:
         default_calc_job_plugin="pythonjob.pythonjob",
     )
     return code.store()
+
+
+# -----------------------------------------------------------------------------
+# Child environment fixture for venv_code tests
+# -----------------------------------------------------------------------------
+
+
+def _check_ensurepip_available() -> bool:
+    """Check if ensurepip is available in the current Python.
+
+    Returns:
+        True if ensurepip is available, False otherwise
+    """
+    return importlib.util.find_spec("ensurepip") is not None
+
+
+@pytest.fixture(scope="session")
+def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
+    """Session-scoped fixture providing an AiiDA-free child environment.
+
+    Creates a virtual environment, installs the project into it (non-editable),
+    then uninstalls aiida-core and aiida-pythonjob. This ensures the child
+    interpreter has no AiiDA available, testing that PythonJob functions can
+    run in a minimal environment with only the declared dependencies.
+
+    Yields:
+        Path to the child interpreter executable
+
+    Raises:
+        AssertionError: If AiiDA can still be imported after uninstallation
+
+    Skips:
+        If ensurepip is unavailable on the platform
+    """
+    # Check if ensurepip is available (Decision 9)
+    if not _check_ensurepip_available():
+        pytest.skip("ensurepip not available - cannot create child environment")
+
+    # Get project root and find-links
+    project_root = Path(__file__).resolve().parent.parent
+    find_links = get_find_links_from_pyproject(project_root / "pyproject.toml")
+
+    # Create venv directory under tmp_path_factory
+    venv_dir = tmp_path_factory.mktemp("venv_child")
+
+    # Create the environment using our custom builder (Decision 3)
+    builder = AiiDAFreeEnvBuilder(project_root=project_root, find_links=find_links)
+    builder.create(venv_dir)
+
+    # The builder should have captured env_exe
+    if builder.env_exe is None:
+        msg = "env_exe not captured by AiiDAFreeEnvBuilder"
+        raise RuntimeError(msg)
+
+    child_python = builder.env_exe
+
+    # Install the project non-editable (Decision 4)
+    # Build the pip install command
+    install_cmd = [str(child_python), "-m", "pip", "install", "--no-cache-dir"]
+
+    # Add --find-links if present (Decision 8)
+    for link_path in find_links:
+        # Resolve relative to project root
+        abs_link = project_root / link_path
+        install_cmd.extend(["--find-links", str(abs_link)])
+
+    # Install the project
+    install_cmd.append(str(project_root))
+
+    result = subprocess.run(
+        install_cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        msg = f"Failed to install project in child environment:\n{result.stderr}"
+        raise RuntimeError(msg)
+
+    # Uninstall aiida-core and aiida-pythonjob (Decision 4)
+    uninstall_cmd = [
+        str(child_python),
+        "-m",
+        "pip",
+        "uninstall",
+        "-y",
+        "aiida-core",
+        "aiida-pythonjob",
+    ]
+    result = subprocess.run(
+        uninstall_cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    # Note: uninstall may fail if packages aren't installed, which is OK
+
+    # Verify AiiDA cannot be imported (Decision 5)
+    check_import_cmd = [
+        str(child_python),
+        "-c",
+        "import aiida",
+    ]
+    result = subprocess.run(
+        check_import_cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        msg = "AiiDA is still importable in child environment - uninstall failed"
+        raise AssertionError(msg)
+
+    # Verify aiida_pythonjob cannot be imported (Decision 5)
+    check_import_cmd = [
+        str(child_python),
+        "-c",
+        "import aiida_pythonjob",
+    ]
+    result = subprocess.run(
+        check_import_cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        msg = (
+            "aiida_pythonjob is still importable in child environment - "
+            "uninstall failed"
+        )
+        raise AssertionError(msg)
+
+    # Verify the venv has pyvenv.cfg (task 2.3 verification)
+    pyvenv_cfg = venv_dir / "pyvenv.cfg"
+    assert pyvenv_cfg.exists(), f"pyvenv.cfg not found at {pyvenv_cfg}"
+
+    return child_python
+
+
+@pytest.fixture
+def remote_python_code(venv_child_environment: Path, aiida_code_installed):
+    """An AiiDA Code for running PythonJobs in the AiiDA-free child environment.
+
+    Points at the child interpreter from venv_child_environment, which has
+    the project installed but no AiiDA packages. This tests that PythonJob
+    functions can run in a minimal environment with only declared dependencies.
+
+    Marked with venv_code so tests using it can be selected/deselected.
+    """
+    return aiida_code_installed(
+        default_calc_job_plugin="pythonjob.pythonjob",
+        filepath_executable=str(venv_child_environment),
+    )
+
+
+@pytest.fixture
+def code(request):
+    """Parametrized fixture that returns either python_code or remote_python_code.
+
+    Used by tests that need to run against both the local interpreter and the
+    AiiDA-free child interpreter.
+
+    The request.param value should be either "python_code" or "remote_python_code".
+    """
+    if request.param == "python_code":
+        return request.getfixturevalue("python_code")
+    if request.param == "remote_python_code":
+        return request.getfixturevalue("remote_python_code")
+    msg = f"Unknown code fixture: {request.param}"
+    raise ValueError(msg)

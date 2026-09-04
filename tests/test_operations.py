@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 
 import numpy as np
 import pytest
@@ -71,18 +72,24 @@ def test_calculate_dispersion_pure_function(quartz_castep_bin):
     assert modes.frequencies.shape[0] > 1  # multiple q-points along the path
 
 
-def test_dispersion_pythonjob_matches_direct_call(python_code, quartz_castep_bin):
+@pytest.mark.venv_code
+@pytest.mark.parametrize("code", ["python_code", "remote_python_code"], indirect=True)
+def test_dispersion_pythonjob_matches_direct_call(code, quartz_castep_bin):
     """Running via PythonJob reproduces a direct public-API computation.
 
     This is an *equivalence* test: rather than hard-coding reference frequencies,
     we compare the AiiDA-wrapped result against calling Euphonic directly.
+
+    Parametrized to run with both the local interpreter (python_code) and the
+    AiiDA-free child interpreter (remote_python_code) to verify that PythonJob
+    functions work in a minimal environment.
     """
     q_spacing = 0.1
     force_constants = ForceConstants.from_castep(quartz_castep_bin)
     expected = calculate_dispersion(force_constants, q_spacing=q_spacing)
 
     fc_node = ForceConstantsData(force_constants)
-    inputs = prepare_dispersion_inputs(fc_node, q_spacing=q_spacing, code=python_code)
+    inputs = prepare_dispersion_inputs(fc_node, q_spacing=q_spacing, code=code)
     results, node = run_get_node(PythonJob, **inputs)
 
     assert node.is_finished_ok, node.exit_status
@@ -97,6 +104,35 @@ def test_dispersion_pythonjob_matches_direct_call(python_code, quartz_castep_bin
         expected.frequencies.magnitude,
         rtol=1e-3,
         atol=0.05,  # meV
+    )
+
+
+@pytest.mark.venv_code
+def test_child_environment_lacks_aiida(venv_child_environment):
+    """Verify that the child environment cannot import AiiDA.
+
+    This test exists to make Decision 5's precondition visible in the test
+    report, rather than buried in fixture setup. It verifies that the
+    venv_child_environment fixture correctly removed AiiDA packages.
+    """
+    # Test that aiida cannot be imported
+    result = subprocess.run(
+        [str(venv_child_environment), "-c", "import aiida"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0, "AiiDA should not be importable in child environment"
+
+    # Test that aiida_pythonjob cannot be imported
+    result = subprocess.run(
+        [str(venv_child_environment), "-c", "import aiida_pythonjob"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0, (
+        "aiida_pythonjob should not be importable in child environment"
     )
 
 

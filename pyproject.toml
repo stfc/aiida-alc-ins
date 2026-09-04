@@ -105,6 +105,7 @@ testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "containerized: integration tests requiring a local or CI container runtime (podman/docker)",
+    "venv_code: tests that build and run against a separate interpreter environment (AiiDA-free venv)",
 ]
 filterwarnings = [
     "ignore:Creating AiiDA configuration folder:UserWarning",
