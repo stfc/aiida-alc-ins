@@ -109,30 +109,39 @@ def test_dispersion_pythonjob_matches_direct_call(code, quartz_castep_bin):
 
 @pytest.mark.venv_code
 def test_child_environment_lacks_aiida(venv_child_environment):
-    """Verify that the child environment cannot import AiiDA.
+    """Verify that the child interpreter cannot import AiiDA.
+
+    The venv_child_environment fixture returns a Path to a Python interpreter
+    in an AiiDA-free virtual environment. This test verifies that the
+    fixture correctly uninstalled aiida-core and aiida-pythonjob, ensuring
+    that PythonJob functions must resolve their dependencies from the
+    project's declared runtime dependencies alone.
 
     This test exists to make Decision 5's precondition visible in the test
-    report, rather than buried in fixture setup. It verifies that the
-    venv_child_environment fixture correctly removed AiiDA packages.
+    report, rather than buried in fixture setup.
     """
-    # Test that aiida cannot be imported
-    result = subprocess.run(
-        [str(venv_child_environment), "-c", "import aiida"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    assert result.returncode != 0, "AiiDA should not be importable in child environment"
+    child_python = venv_child_environment  # Path to child interpreter
 
-    # Test that aiida_pythonjob cannot be imported
+    # Verify aiida-core was uninstalled
     result = subprocess.run(
-        [str(venv_child_environment), "-c", "import aiida_pythonjob"],
+        [str(child_python), "-c", "import aiida"],
         capture_output=True,
         text=True,
         check=False,
     )
     assert result.returncode != 0, (
-        "aiida_pythonjob should not be importable in child environment"
+        "aiida-core should have been uninstalled from child environment"
+    )
+
+    # Verify aiida-pythonjob was uninstalled
+    result = subprocess.run(
+        [str(child_python), "-c", "import aiida_pythonjob"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0, (
+        "aiida-pythonjob should have been uninstalled from child environment"
     )
 
 
