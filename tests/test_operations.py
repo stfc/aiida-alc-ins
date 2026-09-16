@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import subprocess
 
 import numpy as np
 import pytest
@@ -71,18 +72,27 @@ def test_calculate_dispersion_pure_function(quartz_castep_bin):
     assert modes.frequencies.shape[0] > 1  # multiple q-points along the path
 
 
-def test_dispersion_pythonjob_matches_direct_call(python_code, quartz_castep_bin):
+@pytest.mark.venv_code
+def test_dispersion_pythonjob_matches_direct_call(
+    python_code_with_and_without_aiida, quartz_castep_bin
+):
     """Running via PythonJob reproduces a direct public-API computation.
 
     This is an *equivalence* test: rather than hard-coding reference frequencies,
     we compare the AiiDA-wrapped result against calling Euphonic directly.
+
+    Parametrized via the python_code_with_and_without_aiida fixture to run with
+    both the local interpreter and the AiiDA-free child interpreter, verifying
+    that PythonJob functions work in a minimal environment.
     """
     q_spacing = 0.1
     force_constants = ForceConstants.from_castep(quartz_castep_bin)
     expected = calculate_dispersion(force_constants, q_spacing=q_spacing)
 
     fc_node = ForceConstantsData(force_constants)
-    inputs = prepare_dispersion_inputs(fc_node, q_spacing=q_spacing, code=python_code)
+    inputs = prepare_dispersion_inputs(
+        fc_node, q_spacing=q_spacing, code=python_code_with_and_without_aiida
+    )
     results, node = run_get_node(PythonJob, **inputs)
 
     assert node.is_finished_ok, node.exit_status
@@ -97,6 +107,44 @@ def test_dispersion_pythonjob_matches_direct_call(python_code, quartz_castep_bin
         expected.frequencies.magnitude,
         rtol=1e-3,
         atol=0.05,  # meV
+    )
+
+
+@pytest.mark.venv_code
+def test_child_environment_lacks_aiida(venv_child_environment):
+    """Verify that the child interpreter cannot import AiiDA.
+
+    The venv_child_environment fixture returns a Path to a Python interpreter
+    in an AiiDA-free virtual environment. This test verifies that the
+    fixture correctly uninstalled aiida-core and aiida-pythonjob, ensuring
+    that PythonJob functions must resolve their dependencies from the
+    project's declared runtime dependencies alone.
+
+    This test exists to make Decision 5's precondition visible in the test
+    report, rather than buried in fixture setup.
+    """
+    child_python = venv_child_environment  # Path to child interpreter
+
+    # Verify aiida-core was uninstalled
+    result = subprocess.run(
+        [str(child_python), "-c", "import aiida"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0, (
+        "aiida-core should have been uninstalled from child environment"
+    )
+
+    # Verify aiida-pythonjob was uninstalled
+    result = subprocess.run(
+        [str(child_python), "-c", "import aiida_pythonjob"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode != 0, (
+        "aiida-pythonjob should have been uninstalled from child environment"
     )
 
 
