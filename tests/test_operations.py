@@ -73,23 +73,26 @@ def test_calculate_dispersion_pure_function(quartz_castep_bin):
 
 
 @pytest.mark.venv_code
-@pytest.mark.parametrize("code", ["python_code", "remote_python_code"], indirect=True)
-def test_dispersion_pythonjob_matches_direct_call(code, quartz_castep_bin):
+def test_dispersion_pythonjob_matches_direct_call(
+    python_code_with_and_without_aiida, quartz_castep_bin
+):
     """Running via PythonJob reproduces a direct public-API computation.
 
     This is an *equivalence* test: rather than hard-coding reference frequencies,
     we compare the AiiDA-wrapped result against calling Euphonic directly.
 
-    Parametrized to run with both the local interpreter (python_code) and the
-    AiiDA-free child interpreter (remote_python_code) to verify that PythonJob
-    functions work in a minimal environment.
+    Parametrized via the python_code_with_and_without_aiida fixture to run with
+    both the local interpreter and the AiiDA-free child interpreter, verifying
+    that PythonJob functions work in a minimal environment.
     """
     q_spacing = 0.1
     force_constants = ForceConstants.from_castep(quartz_castep_bin)
     expected = calculate_dispersion(force_constants, q_spacing=q_spacing)
 
     fc_node = ForceConstantsData(force_constants)
-    inputs = prepare_dispersion_inputs(fc_node, q_spacing=q_spacing, code=code)
+    inputs = prepare_dispersion_inputs(
+        fc_node, q_spacing=q_spacing, code=python_code_with_and_without_aiida
+    )
     results, node = run_get_node(PythonJob, **inputs)
 
     assert node.is_finished_ok, node.exit_status

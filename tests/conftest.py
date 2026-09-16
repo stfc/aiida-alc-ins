@@ -371,14 +371,12 @@ def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
 
 
 @pytest.fixture
-def remote_python_code(venv_child_environment: Path, aiida_code_installed):
+def aiida_free_python_code(venv_child_environment: Path, aiida_code_installed):
     """An AiiDA Code for running PythonJobs in the AiiDA-free child environment.
 
     Points at the child interpreter from venv_child_environment, which has
     the project installed but no AiiDA packages. This tests that PythonJob
     functions can run in a minimal environment with only declared dependencies.
-
-    Marked with venv_code so tests using it can be selected/deselected.
     """
     return aiida_code_installed(
         default_calc_job_plugin="pythonjob.pythonjob",
@@ -386,18 +384,12 @@ def remote_python_code(venv_child_environment: Path, aiida_code_installed):
     )
 
 
-@pytest.fixture
-def code(request):
-    """Parametrized fixture that returns either python_code or remote_python_code.
+@pytest.fixture(params=["python_code", "aiida_free_python_code"])
+def python_code_with_and_without_aiida(request):
+    """Parametrized fixture providing both local and AiiDA-free PythonJob codes.
 
-    Used by tests that need to run against both the local interpreter and the
-    AiiDA-free child interpreter.
-
-    The request.param value should be either "python_code" or "remote_python_code".
+    Tests using this fixture run twice: once with the local interpreter
+    (python_code) and once with the AiiDA-free child interpreter
+    (aiida_free_python_code).
     """
-    if request.param == "python_code":
-        return request.getfixturevalue("python_code")
-    if request.param == "remote_python_code":
-        return request.getfixturevalue("remote_python_code")
-    msg = f"Unknown code fixture: {request.param}"
-    raise ValueError(msg)
+    return request.getfixturevalue(request.param)
