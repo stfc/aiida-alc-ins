@@ -18,12 +18,9 @@ import tempfile
 import tomllib
 import venv
 from pathlib import Path
-from uuid import uuid4
 
+import paramiko
 import pytest
-from cryptography.hazmat.backends import default_backend as crypto_default_backend
-from cryptography.hazmat.primitives import serialization as crypto_serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 
 # -----------------------------------------------------------------------------
 # Child environment builder for venv_code tests
@@ -108,6 +105,7 @@ from aiida.orm import Computer, InstalledCode  # noqa: E402
 from filelock import FileLock  # noqa: E402
 from tests.container_support import (  # noqa: E402
     SSHContainer,
+    SSHKeyPair,
     detect_container_engine,
 )
 
@@ -226,52 +224,26 @@ def container_engine() -> str:
 
 
 @pytest.fixture(scope="session")
-def ssh_key(tmp_path_factory: pytest.TempPathFactory):
-    """Generate an ephemeral RSA SSH keypair in TraditionalOpenSSL format.
+def ssh_keypair(tmp_path_factory: pytest.TempPathFactory) -> SSHKeyPair:
+    """Generate an ephemeral RSA SSH keypair for the test session."""
+    key_dir = tmp_path_factory.mktemp("ssh")
+    private_key = key_dir / "id_rsa"
+    public_key = key_dir / "id_rsa.pub"
 
-    Note: Upstream aiida-core's ssh_key fixture exports PKCS#8 format
-    ('BEGIN PRIVATE KEY'), which Paramiko's RSAKey cannot parse. This fixture
-    exports TraditionalOpenSSL format ('BEGIN RSA PRIVATE KEY'), ensuring
-    Paramiko compatibility.
-    """
-    key = rsa.generate_private_key(
-        backend=crypto_default_backend(),
-        public_exponent=65537,
-        key_size=2048,
-    )
+    key = paramiko.RSAKey.generate(2048)
+    key.write_private_key_file(str(private_key))
+    public_key.write_text(f"{key.get_name()} {key.get_base64()}\n")
 
-    private_key = key.private_bytes(
-        crypto_serialization.Encoding.PEM,
-        crypto_serialization.PrivateFormat.TraditionalOpenSSL,
-        crypto_serialization.NoEncryption(),
-    )
+    return SSHKeyPair(private_key=private_key, public_key=public_key)
 
-    public_key = key.public_key().public_bytes(
-        crypto_serialization.Encoding.OpenSSH,
-        crypto_serialization.PublicFormat.OpenSSH,
-    )
 
-    dirpath = tmp_path_factory.mktemp("ssh_session_keys")
-    filename = f"id_rsa_{uuid4().hex[:8]}"
-    filepath_private_key = dirpath / filename
-    filepath_public_key = dirpath / f"{filename}.pub"
-
-    filepath_private_key.write_bytes(private_key)
-    filepath_private_key.chmod(0o600)
-    filepath_public_key.write_bytes(public_key)
-    filepath_public_key.chmod(0o644)
-
-    try:
-        yield filepath_private_key
-    finally:
-        filepath_private_key.unlink(missing_ok=True)
-        filepath_public_key.unlink(missing_ok=True)
+ssh_key = ssh_keypair
 
 
 @pytest.fixture(scope="session")
 def remote_container_info(
     container_engine: str,
-    ssh_key: Path,
+    ssh_keypair: SSHKeyPair,
     tmp_path_factory: pytest.TempPathFactory,
     worker_id: str,
 ) -> dict[str, str | int]:
@@ -282,7 +254,7 @@ def remote_container_info(
         container = SSHContainer(
             engine=container_engine,
             project_root=project_root,
-            ssh_key_file=ssh_key,
+            keypair=ssh_keypair,
         )
         info = container.start()
         try:
@@ -302,7 +274,7 @@ def remote_container_info(
             container = SSHContainer(
                 engine=container_engine,
                 project_root=project_root,
-                ssh_key_file=ssh_key,
+                keypair=ssh_keypair,
             )
             info = container.start()
             info_file.write_text(json.dumps(info))

@@ -63,8 +63,10 @@ anyway, because anyone on real HPC must configure their own computer regardless.
 - Provision the remote environment with a plain, non-editable install of the
   project, so dependency resolution is the one users are told to rely on and the
   built distribution is exercised.
-- Generate the SSH keypair per session with aiida-core's `ssh_key` fixture and
-  inject the public key at run time, removing the committed private key from the
+- Generate an ephemeral SSH keypair per session using a structured `SSHKeyPair`
+  (powered by Paramiko's high-level `RSAKey.generate()` rather than low-level
+  `cryptography.hazmat`), explicitly providing both private and public key paths,
+  and inject the public key at run time, removing committed private keys from the
   repository and making the image generic.
 - Support parallel test execution via `pytest-xdist`:
   - Adopt the official `pytest-xdist` `FileLock` pattern in `tests/conftest.py`

@@ -43,11 +43,17 @@ See `proposal.md` for motivation on decoupling the container from Slurm, introdu
   - *Per-worker containers ("spawn more")*: Rejected due to concurrent build races on the same image tag and high CPU/memory consumption.
   - *Worker grouping (`@pytest.mark.xdist_group`)*: Confines all containerized tests to a single worker. While simple, it prevents running independent workflow tests in parallel across workers.
 
-### Decision 3: Ephemeral session SSH key injection and runtime port assignment
+### Decision 3: Structured ephemeral SSH keypair (`SSHKeyPair`) via Paramiko and runtime port assignment
 
-- **Approach**: Generate a dynamic SSH keypair during test session setup using `aiida-core`'s `ssh_key` test fixture. Inject the public key into the container on launch (via file copy or authorized_keys directory mount). Expose SSH on `127.0.0.1` using container runtime dynamic port mapping (`-p 127.0.0.1::22`), and query the assigned port with `inspect`.
-- **Rationale**: Removes the committed private key `tests/container/id_rsa` from git. Runtime dynamic port assignment avoids port collision races between parallel test processes on loopback.
+- **Approach**: Generate a dynamic SSH keypair during test session setup using Paramiko's high-level `RSAKey.generate(2048)` API. Instead of returning a bare private key path and writing a companion `.pub` file as a hidden side-effect, return an explicit `SSHKeyPair` dataclass containing typed paths to both `private_key` and `public_key`. Pass the keypair to `SSHContainer`, which volume-mounts `public_key` to `/home/ubuntu/.ssh/authorized_keys` and authenticates using `private_key`. Expose SSH on `127.0.0.1` using container runtime dynamic port mapping (`-p 127.0.0.1::22`), and query the assigned port with `inspect`.
+- **Rationale**: 
+  - Eliminates the low-level `cryptography.hazmat` package in favor of high-level primitives already provided by Paramiko (an existing project dependency).
+  - Eliminates the confusing side-effect where `ssh_key` yielded a private key path while secretly writing a `.pub` file that consumers had to guess using `.with_suffix(".pub")`.
+  - Removes the committed private key `tests/container/id_rsa` from git.
+  - Runtime dynamic port assignment avoids port collision races between parallel test processes on loopback.
 - **Alternatives considered**:
+  - *`cryptography.hazmat` generation (upstream `aiida-core` pattern)*: Rejected due to unnecessary verbosity (30+ lines of low-level serialization code) and introducing hazardous primitives where high-level Paramiko APIs suffice.
+  - *Bare private key `Path` with `.pub` side-effect file*: Rejected due to poor API clarity and hidden coupling.
   - *Pre-baked static keys in Dockerfile*: Security smell and causes static key reuse across all test sessions.
   - *Pre-probing free ports via `find_free_port()`*: Prone to race conditions under parallel execution where another process or worker binds the probed port before `docker run` can claim it.
 

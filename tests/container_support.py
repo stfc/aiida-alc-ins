@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import time
 import uuid
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import paramiko
@@ -80,24 +81,29 @@ def query_host_port(engine: str, container_name: str, container_port: int = 22) 
     return int(match.group(1))
 
 
+@dataclass(frozen=True)
+class SSHKeyPair:
+    """An ephemeral SSH keypair generated for test sessions."""
+
+    private_key: Path
+    public_key: Path
+
+    @property
+    def public_key_text(self) -> str:
+        """Return the OpenSSH public key line."""
+        return self.public_key.read_text().strip()
+
+
 class SSHContainer:
     """Manages an ephemeral SSH + HyperQueue test container."""
 
-    def __init__(self, engine: str, project_root: Path, ssh_key_file: Path) -> None:
+    def __init__(self, engine: str, project_root: Path, keypair: SSHKeyPair) -> None:
         self.engine = engine
         self.project_root = project_root
-        self.ssh_key_file = ssh_key_file
+        self.keypair = keypair
         self.container_name = f"aiida-hq-test-{uuid.uuid4().hex[:8]}"
         self.container_id: str | None = None
         self.host_port: int | None = None
-
-    @property
-    def public_key_file(self) -> Path:
-        """Return the corresponding public key path."""
-        pub_path = self.ssh_key_file.with_name(f"{self.ssh_key_file.name}.pub")
-        if not pub_path.exists():
-            pub_path = self.ssh_key_file.with_suffix(".pub")
-        return pub_path
 
     def start(self, timeout: float = 60.0) -> dict[str, str | int]:
         """Launch container, inject public key, and wait for SSH & HQ readiness."""
@@ -105,9 +111,8 @@ class SSHContainer:
         image_tag = ensure_container_image(self.engine, self.project_root)
 
         # 2. Verify public key exists
-        pub_key = self.public_key_file
-        if not pub_key.exists():
-            msg = f"Public key not found at {pub_key}"
+        if not self.keypair.public_key.exists():
+            msg = f"Public key not found at {self.keypair.public_key}"
             raise FileNotFoundError(msg)
 
         # 3. Launch container with dynamic loopback port forward
@@ -120,7 +125,7 @@ class SSHContainer:
             "-p",
             "127.0.0.1::22",
             "-v",
-            f"{pub_key.resolve()}:/home/ubuntu/.ssh/authorized_keys:ro,Z",
+            f"{self.keypair.public_key.resolve()}:/home/ubuntu/.ssh/authorized_keys:ro,Z",
             image_tag,
         ]
         self.container_id = subprocess.check_output(cmd, text=True).strip()
@@ -163,7 +168,7 @@ class SSHContainer:
             "container_id": self.container_id,
             "container_name": self.container_name,
             "host_port": self.host_port,
-            "ssh_key_file": str(self.ssh_key_file),
+            "ssh_key_file": str(self.keypair.private_key),
         }
 
     def _wait_for_readiness(self, timeout: float) -> None:
@@ -202,7 +207,7 @@ class SSHContainer:
                         "127.0.0.1",
                         port=self.host_port,
                         username="ubuntu",
-                        key_filename=str(self.ssh_key_file),
+                        key_filename=str(self.keypair.private_key),
                         timeout=2.0,
                     )
                     ssh_ready = True

@@ -17,7 +17,7 @@ The test suite SHALL provide an integration test setup that launches an ephemera
 #### Scenario: Authentication uses dynamic session keys
 
 - **WHEN** the container is launched for a test session
-- **THEN** an ephemeral SSH keypair is generated and injected at runtime, and no static private key is read from version control
+- **THEN** an ephemeral SSH keypair is generated via high-level SSH primitives (`SSHKeyPair`) exposing explicit private and public key paths, injected into `/home/ubuntu/.ssh/authorized_keys` at runtime, and no static private key is read from version control
 
 #### Scenario: Remote execution takes place where AiiDA is absent
 

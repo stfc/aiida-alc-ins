@@ -16,6 +16,7 @@
 - [x] 3.2 Implement `pytest_collection_modifyitems` in `tests/conftest.py` to sort non-containerized tests ahead of `containerized` tests so unit tests start immediately without waiting for container boot.
 - [x] 3.3 Implement `pytest_sessionfinish` in `tests/conftest.py` on the controller process to cleanly stop and remove the shared container at the end of the test session.
 - [x] 3.4 Implement `remote_computer` and `remote_python_code` fixtures in `tests/conftest.py` configuring an AiiDA `Computer` (`core.ssh` transport, `hyperqueue` scheduler) and `InstalledCode` pointing at `/home/ubuntu/venv/bin/python`.
+- [x] 3.5 Refactor `ssh_key` fixture and `SSHContainer` to use an explicit `SSHKeyPair` dataclass holding both `private_key` and `public_key` paths, removing the implicit public key file side-effect and `.with_suffix(".pub")` filename assumptions.
 
 ## 4. Test Suite Implementation
 
