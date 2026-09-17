@@ -62,8 +62,11 @@ dependencies = [
 [dependency-groups]
 # Dev/test tooling (PEP 735 group; installed by `uv sync`).
 dev = [
+    "aiida-hyperqueue>=0.4",
+    "filelock>=3.12",
     "pytest>=8",
     "pytest-timeout>=2.3",
+    "pytest-xdist>=3",
     "ruff>=0.10",
 ]
 

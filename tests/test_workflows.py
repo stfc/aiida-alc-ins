@@ -9,6 +9,7 @@ from aiida.manage.caching import enable_caching
 from aiida.orm import (
     BandsData,
     CalcJobNode,
+    Dict,
     Float,
     KpointsData,
     List,
@@ -78,7 +79,7 @@ def test_dispersion_workchain(python_code, quartz_castep_bin):
 
 
 def test_dos_workchain(python_code, quartz_castep_bin):
-    """Read force constants -> phonon DOS as XyData."""
+    """Read force constants -> phonon DOS as XyData with options propagation."""
     castep_file = SinglefileData(quartz_castep_bin)
 
     results, node = run_get_node(
@@ -87,6 +88,10 @@ def test_dos_workchain(python_code, quartz_castep_bin):
         q_spacing=Float(0.5),  # coarse grid keeps the test fast
         energy_spacing=Float(2.0),
         code=python_code,
+        options={
+            "resources": {"num_machines": 1, "num_mpiprocs_per_machine": 1},
+            "max_wallclock_seconds": 3600,
+        },
     )
 
     assert node.is_finished_ok, node.exit_status
@@ -97,9 +102,21 @@ def test_dos_workchain(python_code, quartz_castep_bin):
     assert len(energy) == len(values)
     assert (values >= 0).all()
 
+    # Options are recorded in provenance and propagated to child PythonJobs
+    assert "options" in node.inputs
+    assert isinstance(node.inputs.options, Dict)
+    assert node.inputs.options.get_dict()["max_wallclock_seconds"] == 3600
+
     # read + dos, both PythonJobs
     calcjobs = [p for p in node.called_descendants if isinstance(p, CalcJobNode)]
     assert len(calcjobs) == 2
+    for calcjob in calcjobs:
+        opts = calcjob.get_options()
+        assert opts["resources"] == {
+            "num_machines": 1,
+            "num_mpiprocs_per_machine": 1,
+        }
+        assert opts["max_wallclock_seconds"] == 3600
 
 
 def _force_constants_from_phonopy(phonopy_dir):

@@ -57,6 +57,7 @@ class DosWorkChain(ForceConstantsWorkChain):
             q_spacing=self.inputs.q_spacing.value,
             energy_spacing=self.inputs.energy_spacing.value,
             code=self.inputs.code,
+            metadata=self.get_job_metadata(),
         )
         return ToContext(dos=self.submit(PythonJob, **inputs))
 

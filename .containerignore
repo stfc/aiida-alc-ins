@@ -10,7 +10,10 @@
 
 # Re-include what the build needs
 !pyproject.toml
+!README.md
+!LICENSE
 !wheels
+!src
 !tests
 
 # Re-include tests/container specifically (need to walk down the tree)
