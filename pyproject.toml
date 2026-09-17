@@ -116,7 +116,6 @@ filterwarnings = [
     "ignore:There is no current event loop:DeprecationWarning:plumpy",
     "ignore:Object of type .* not in session:sqlalchemy.exc.SAWarning",
     "ignore:Set OLD_ERROR_HANDLING to false:DeprecationWarning:spglib",
-    "ignore:.*setting hyperqueue resources are deprecated.*:aiida_hyperqueue.scheduler.AiiDAHypereQueueDeprecationWarning",
 ]
 
 [tool.ruff]

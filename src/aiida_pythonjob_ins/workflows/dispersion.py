@@ -137,6 +137,7 @@ class DispersionWorkChain(ForceConstantsWorkChain):
             self.ctx.force_constants,
             self.ctx.path,
             code=self.inputs.code,
+            metadata=self.get_job_metadata(),
         )
         return ToContext(modes=self.submit(PythonJob, **inputs))
 

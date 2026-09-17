@@ -23,8 +23,10 @@ needs several files, so it is cleaner to read it up front into a
 
 from __future__ import annotations
 
+from typing import Any
+
 from aiida.engine import ToContext, WorkChain
-from aiida.orm import AbstractCode, SinglefileData
+from aiida.orm import AbstractCode, Dict, SinglefileData, to_aiida_type
 from aiida_pythonjob import PythonJob
 
 from aiida_pythonjob_ins.data import ForceConstantsData
@@ -58,6 +60,13 @@ class ForceConstantsWorkChain(WorkChain):
             valid_type=AbstractCode,
             help="Python code used to run the PythonJob steps.",
         )
+        spec.input(
+            "options",
+            valid_type=Dict,
+            required=False,
+            serializer=to_aiida_type,
+            help="Optional scheduler and execution options passed to child PythonJobs.",
+        )
         spec.inputs.validator = cls._validate_source
         spec.exit_code(
             400,
@@ -74,6 +83,12 @@ class ForceConstantsWorkChain(WorkChain):
             return "Provide exactly one of `castep_file` or `force_constants`."
         return None
 
+    def get_job_metadata(self) -> dict[str, Any]:
+        """Return metadata dictionary for child PythonJobs."""
+        if "options" in self.inputs:
+            return {"options": self.inputs.options.get_dict()}
+        return {}
+
     def should_read_castep(self) -> bool:
         """Outline predicate: read a CASTEP file only if no node was supplied."""
         return "force_constants" not in self.inputs
@@ -81,7 +96,9 @@ class ForceConstantsWorkChain(WorkChain):
     def read_force_constants(self):
         """Read force constants from the CASTEP file via a PythonJob."""
         inputs = prepare_read_force_constants_inputs(
-            self.inputs.castep_file, code=self.inputs.code
+            self.inputs.castep_file,
+            code=self.inputs.code,
+            metadata=self.get_job_metadata(),
         )
         return ToContext(read=self.submit(PythonJob, **inputs))
 

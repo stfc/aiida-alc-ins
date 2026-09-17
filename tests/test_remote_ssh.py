@@ -80,7 +80,11 @@ def test_ssh_transport_raw(remote_computer, tmp_path):
 def test_pythonjob_remote_ssh(remote_python_code, quartz_castep_bin):
     """Run an individual PythonJob on remote computer over SSH with HyperQueue."""
     castep_file = SinglefileData(quartz_castep_bin)
-    inputs = prepare_read_force_constants_inputs(castep_file, code=remote_python_code)
+    inputs = prepare_read_force_constants_inputs(
+        castep_file,
+        code=remote_python_code,
+        metadata={"options": {"resources": {"num_cpus": 1}}},
+    )
     results, node = run_get_node(PythonJob, **inputs)
 
     if not node.is_finished_ok:
@@ -113,6 +117,7 @@ def test_dos_workchain_remote_ssh(remote_python_code, quartz_castep_bin):
         q_spacing=Float(0.5),  # coarse grid for speed
         energy_spacing=Float(2.0),
         code=remote_python_code,
+        options={"resources": {"num_cpus": 1}},
     )
 
     assert node.is_finished_ok, f"WorkChain failed: {node.exit_status}"

@@ -77,6 +77,21 @@ def prepare_interpolation_inputs(
     ``qpoints`` is a native ``KpointsData`` q-point specification, deserialized to
     a fractional-coordinate array before interpolation. The returned modes are
     serialized to a :class:`~aiida_pythonjob_ins.data.QpointPhononModesData`.
+
+    Parameters
+    ----------
+    force_constants
+        Force constants node.
+    qpoints
+        q-point path or mesh.
+    computer, code
+        Standard AiiDA execution targets.
+    kwargs
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
     """
     return prepare_pythonjob_inputs(
         function=interpolate_phonon_modes,
@@ -102,6 +117,19 @@ def prepare_read_force_constants_inputs(
     (mirroring how a real remote calculation stages its inputs); the function then
     reads it by basename and returns a ``ForceConstants`` serialized to a
     :class:`~aiida_pythonjob_ins.data.ForceConstantsData` node.
+
+    Parameters
+    ----------
+    castep_file
+        CASTEP .castep_bin or .check file path or SinglefileData node.
+    computer, code
+        Standard AiiDA execution targets.
+    kwargs
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
     """
     filename = _staged_filename(castep_file)
     return prepare_pythonjob_inputs(
@@ -131,6 +159,23 @@ def prepare_read_phonopy_inputs(
     ``FORCE_CONSTANTS``) and optional ``born`` (``BORN``) files are staged into the
     working directory via ``upload_files``; the function reads them by basename and
     returns a ``ForceConstants`` serialized to a ``ForceConstantsData`` node.
+
+    Parameters
+    ----------
+    summary
+        Path or SinglefileData for Phonopy summary YAML file.
+    force_constants
+        Path or SinglefileData for Phonopy force constants file.
+    born
+        Optional path or SinglefileData for Born effective charges.
+    computer, code
+        Standard AiiDA execution targets.
+    kwargs
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
     """
     upload_files: dict[str, str | orm.SinglefileData] = {
         "summary": summary,
@@ -177,7 +222,11 @@ def prepare_dispersion_inputs(
         Standard AiiDA execution targets. If ``code`` is ``None``,
         aiida-pythonjob resolves/creates a Python code on ``computer``.
     kwargs
-        Extra keyword arguments forwarded to ``prepare_pythonjob_inputs``.
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
 
     Returns
     -------
@@ -211,6 +260,23 @@ def prepare_dos_inputs(
     ``q_spacing`` is the target Monkhorst-Pack grid spacing (1/Angstrom) and
     ``energy_spacing`` the DOS bin width (meV). The returned euphonic ``Spectrum1D``
     is serialized to a native ``XyData``.
+
+    Parameters
+    ----------
+    force_constants
+        Force constants node.
+    q_spacing
+        Target Monkhorst-Pack grid spacing in 1/Angstrom.
+    energy_spacing
+        DOS energy bin width in meV.
+    computer, code
+        Standard AiiDA execution targets.
+    kwargs
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
     """
     return prepare_pythonjob_inputs(
         function=calculate_dos,
@@ -243,6 +309,21 @@ def prepare_grid_interpolation_inputs(
     sampling for the TOSCA intensity calculation, as distinct from
     :func:`prepare_interpolation_inputs`'s caller-supplied path (used for a band
     structure).
+
+    Parameters
+    ----------
+    force_constants
+        Force constants node.
+    q_spacing
+        Target Monkhorst-Pack grid spacing in 1/Angstrom.
+    computer, code
+        Standard AiiDA execution targets.
+    kwargs
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
     """
     return prepare_pythonjob_inputs(
         function=interpolate_phonon_modes_on_grid,
@@ -280,6 +361,31 @@ def prepare_tosca_spectrum_inputs(
     default) and is passed through unchanged; :func:`calculate_tosca_spectrum`
     supplies the actual default (TOSCA's two banks) so it is documented in one
     place.
+
+    Parameters
+    ----------
+    modes
+        Phonon modes node.
+    temperature
+        Sample temperature in kelvin.
+    energy_spacing
+        Energy bin width in ``energy_unit``.
+    energy_max
+        Maximum energy in ``energy_unit``.
+    detector_angles
+        Scattering angles in degrees.
+    final_energy
+        Final neutron energy in ``energy_unit``.
+    energy_unit
+        Energy unit string (e.g. '1/cm').
+    computer, code
+        Standard AiiDA execution targets.
+    kwargs
+        Extra arguments forwarded to
+        :func:`~aiida_pythonjob.prepare_pythonjob_inputs`, such as
+        ``metadata={"options": {"resources": {"num_cpus": 1}}}`` for
+        scheduler options or ``upload_files``, ``parent_folder``, and
+        ``process_label``.
     """
     return prepare_pythonjob_inputs(
         function=calculate_tosca_spectrum,

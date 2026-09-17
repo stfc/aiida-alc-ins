@@ -30,9 +30,11 @@ one input does not invalidate the others under caching (Decision 5):
 
 from __future__ import annotations
 
+from typing import Any
+
 from aiida.common import AttributeDict
 from aiida.engine import ToContext, WorkChain, calcfunction, if_
-from aiida.orm import AbstractCode, Float, List, Str, XyData
+from aiida.orm import AbstractCode, Dict, Float, List, Str, XyData, to_aiida_type
 from aiida_pythonjob import PythonJob
 
 from aiida_pythonjob_ins.conversions import (
@@ -154,6 +156,13 @@ class ToscaFromModesWorkChain(WorkChain):
             valid_type=AbstractCode,
             help="Python code used to run the intensity PythonJob.",
         )
+        spec.input(
+            "options",
+            valid_type=Dict,
+            required=False,
+            serializer=to_aiida_type,
+            help="Optional scheduler and execution options passed to child PythonJobs.",
+        )
         spec.outline(
             cls.compute_intensities,
             cls.group,
@@ -180,6 +189,12 @@ class ToscaFromModesWorkChain(WorkChain):
             message="The intensity PythonJob did not finish successfully.",
         )
 
+    def get_job_metadata(self) -> dict[str, Any]:
+        """Return metadata dictionary for child PythonJobs."""
+        if "options" in self.inputs:
+            return {"options": self.inputs.options.get_dict()}
+        return {}
+
     def compute_intensities(self):
         """Compute the full, ungrouped line set as a PythonJob."""
         inputs = prepare_tosca_spectrum_inputs(
@@ -191,6 +206,7 @@ class ToscaFromModesWorkChain(WorkChain):
             final_energy=self.inputs.final_energy.value,
             energy_unit=self.inputs.energy_unit.value,
             code=self.inputs.code,
+            metadata=self.get_job_metadata(),
         )
         return ToContext(intensities=self.submit(PythonJob, **inputs))
 
@@ -283,6 +299,7 @@ class ToscaFromForceConstantsWorkChain(ForceConstantsWorkChain):
             self.ctx.force_constants,
             q_spacing=self.inputs.q_spacing.value,
             code=self.inputs.code,
+            metadata=self.get_job_metadata(),
         )
         return ToContext(modes=self.submit(PythonJob, **inputs))
 
@@ -296,6 +313,8 @@ class ToscaFromForceConstantsWorkChain(ForceConstantsWorkChain):
         )
         inputs.modes = self.ctx.modes.outputs.result
         inputs.code = self.inputs.code
+        if "options" in self.inputs and "options" not in inputs:
+            inputs.options = self.inputs.options
         return ToContext(
             spectrum_workchain=self.submit(ToscaFromModesWorkChain, **inputs)
         )
