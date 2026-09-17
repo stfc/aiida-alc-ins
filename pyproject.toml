@@ -62,8 +62,11 @@ dependencies = [
 [dependency-groups]
 # Dev/test tooling (PEP 735 group; installed by `uv sync`).
 dev = [
+    "aiida-hyperqueue>=0.4",
+    "filelock>=3.12",
     "pytest>=8",
     "pytest-timeout>=2.3",
+    "pytest-xdist>=3",
     "ruff>=0.10",
 ]
 
@@ -113,6 +116,7 @@ filterwarnings = [
     "ignore:There is no current event loop:DeprecationWarning:plumpy",
     "ignore:Object of type .* not in session:sqlalchemy.exc.SAWarning",
     "ignore:Set OLD_ERROR_HANDLING to false:DeprecationWarning:spglib",
+    "ignore:.*setting hyperqueue resources are deprecated.*:aiida_hyperqueue.scheduler.AiiDAHypereQueueDeprecationWarning",
 ]
 
 [tool.ruff]

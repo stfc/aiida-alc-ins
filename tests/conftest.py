@@ -10,6 +10,7 @@ https://aiida.readthedocs.io/projects/aiida-core/en/stable/topics/plugins.html#t
 from __future__ import annotations
 
 import importlib.util
+import logging
 import os
 import subprocess
 import sys
@@ -17,8 +18,12 @@ import tempfile
 import tomllib
 import venv
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
+from cryptography.hazmat.backends import default_backend as crypto_default_backend
+from cryptography.hazmat.primitives import serialization as crypto_serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 # -----------------------------------------------------------------------------
 # Child environment builder for venv_code tests
@@ -96,10 +101,13 @@ _AIIDA_CONFIG_TMPDIR = tempfile.TemporaryDirectory(
 )
 os.environ["AIIDA_PATH"] = _AIIDA_CONFIG_TMPDIR.name
 
+import json  # noqa: E402
+
 from aiida.manage.configuration import get_config  # noqa: E402
 from aiida.orm import Computer, InstalledCode  # noqa: E402
-from tests.slurm_support import (  # noqa: E402
-    SlurmContainer,
+from filelock import FileLock  # noqa: E402
+from tests.container_support import (  # noqa: E402
+    SSHContainer,
     detect_container_engine,
 )
 
@@ -109,6 +117,46 @@ get_config(create=True)
 def pytest_unconfigure(config):
     """Remove the ephemeral AiiDA config directory at the end of the session."""
     _AIIDA_CONFIG_TMPDIR.cleanup()
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Sort non-containerized tests first; containerized tests run last."""
+    items.sort(key=lambda item: 1 if item.get_closest_marker("containerized") else 0)
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Controller process stops the shared container once all workers finish."""
+    if not hasattr(session.config, "workerinput"):
+        tmp_factory = getattr(session.config, "_tmp_path_factory", None)
+        if tmp_factory:
+            shared_dir = tmp_factory.getbasetemp().parent
+            info_file = shared_dir / "container_info.json"
+            if info_file.is_file():
+                try:
+                    info = json.loads(info_file.read_text())
+                    container_name = info.get("container_name")
+                    if container_name:
+                        for engine in ("podman", "docker"):
+                            subprocess.run(
+                                [engine, "rm", "-f", str(container_name)],
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL,
+                                check=False,
+                            )
+                except (OSError, json.JSONDecodeError):
+                    logging.getLogger("tests.conftest").debug(
+                        "Failed to parse container_info.json during teardown",
+                        exc_info=True,
+                    )
+                finally:
+                    info_file.unlink(missing_ok=True)
+
+
+if not importlib.util.find_spec("xdist"):
+
+    @pytest.fixture(scope="session")
+    def worker_id() -> str:
+        return "master"
 
 
 pytest_plugins = ["aiida.tools.pytest_fixtures"]
@@ -178,40 +226,109 @@ def container_engine() -> str:
 
 
 @pytest.fixture(scope="session")
-def slurm_container(container_engine: str, tmp_path_factory: pytest.TempPathFactory):
-    """Session-scoped Slurm container built from tests/container/Dockerfile."""
-    key_dir = tmp_path_factory.mktemp("slurm_keys")
-    project_root = Path(__file__).resolve().parent.parent
-    container = SlurmContainer(
-        engine=container_engine,
-        project_root=project_root,
-        key_dir=key_dir,
+def ssh_key(tmp_path_factory: pytest.TempPathFactory):
+    """Generate an ephemeral RSA SSH keypair in TraditionalOpenSSL format.
+
+    Note: Upstream aiida-core's ssh_key fixture exports PKCS#8 format
+    ('BEGIN PRIVATE KEY'), which Paramiko's RSAKey cannot parse. This fixture
+    exports TraditionalOpenSSL format ('BEGIN RSA PRIVATE KEY'), ensuring
+    Paramiko compatibility.
+    """
+    key = rsa.generate_private_key(
+        backend=crypto_default_backend(),
+        public_exponent=65537,
+        key_size=2048,
     )
-    container.start()
+
+    private_key = key.private_bytes(
+        crypto_serialization.Encoding.PEM,
+        crypto_serialization.PrivateFormat.TraditionalOpenSSL,
+        crypto_serialization.NoEncryption(),
+    )
+
+    public_key = key.public_key().public_bytes(
+        crypto_serialization.Encoding.OpenSSH,
+        crypto_serialization.PublicFormat.OpenSSH,
+    )
+
+    dirpath = tmp_path_factory.mktemp("ssh_session_keys")
+    filename = f"id_rsa_{uuid4().hex[:8]}"
+    filepath_private_key = dirpath / filename
+    filepath_public_key = dirpath / f"{filename}.pub"
+
+    filepath_private_key.write_bytes(private_key)
+    filepath_private_key.chmod(0o600)
+    filepath_public_key.write_bytes(public_key)
+    filepath_public_key.chmod(0o644)
+
     try:
-        yield container
+        yield filepath_private_key
     finally:
-        container.stop()
+        filepath_private_key.unlink(missing_ok=True)
+        filepath_public_key.unlink(missing_ok=True)
 
 
 @pytest.fixture(scope="session")
-def slurm_computer(aiida_profile, slurm_container: SlurmContainer) -> Computer:
-    """An AiiDA Computer configured for core.ssh + core.slurm on the container."""
+def remote_container_info(
+    container_engine: str,
+    ssh_key: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+    worker_id: str,
+) -> dict[str, str | int]:
+    """Shared container connection info across xdist workers using FileLock."""
+    project_root = Path(__file__).resolve().parent.parent
+
+    if worker_id == "master":
+        container = SSHContainer(
+            engine=container_engine,
+            project_root=project_root,
+            ssh_key_file=ssh_key,
+        )
+        info = container.start()
+        try:
+            yield info
+        finally:
+            container.stop()
+        return
+
+    shared_dir = tmp_path_factory.getbasetemp().parent
+    info_file = shared_dir / "container_info.json"
+    lock_file = shared_dir / "container.lock"
+
+    with FileLock(str(lock_file)):
+        if info_file.is_file():
+            info = json.loads(info_file.read_text())
+        else:
+            container = SSHContainer(
+                engine=container_engine,
+                project_root=project_root,
+                ssh_key_file=ssh_key,
+            )
+            info = container.start()
+            info_file.write_text(json.dumps(info))
+
+    yield info
+
+
+@pytest.fixture(scope="session")
+def remote_computer(
+    aiida_profile, remote_container_info: dict[str, str | int]
+) -> Computer:
+    """An AiiDA Computer configured for core.ssh + hyperqueue on the container."""
     computer = Computer(
-        label="slurm-container",
+        label="remote-container",
         hostname="127.0.0.1",
         transport_type="core.ssh",
-        scheduler_type="core.slurm",
+        scheduler_type="hyperqueue",
         workdir="/tmp/aiida_run",
     )
     computer.set_minimum_job_poll_interval(0.5)
-    computer.set_default_mpiprocs_per_machine(1)
     computer.store()
 
     computer.configure(
-        port=slurm_container.host_port,
+        port=int(remote_container_info["host_port"]),
         username="ubuntu",
-        key_filename=str(slurm_container.ssh_key_file),
+        key_filename=str(remote_container_info["ssh_key_file"]),
         load_system_host_keys=False,
         key_policy="AutoAddPolicy",
         safe_interval=0.0,
@@ -222,11 +339,11 @@ def slurm_computer(aiida_profile, slurm_container: SlurmContainer) -> Computer:
 
 
 @pytest.fixture(scope="session")
-def slurm_python_code(slurm_computer: Computer) -> InstalledCode:
-    """An AiiDA Code for running PythonJobs on the Slurm container."""
+def remote_python_code(remote_computer: Computer) -> InstalledCode:
+    """An AiiDA Code for running PythonJobs on the remote HyperQueue container."""
     code = InstalledCode(
-        label="slurm-python",
-        computer=slurm_computer,
+        label="remote-python",
+        computer=remote_computer,
         filepath_executable="/home/ubuntu/venv/bin/python",
         default_calc_job_plugin="pythonjob.pythonjob",
     )

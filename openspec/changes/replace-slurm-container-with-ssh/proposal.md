@@ -1,8 +1,7 @@
-# Replace the Slurm container with an SSH-only integration test
+# Replace the Slurm container with a lightweight SSH and HyperQueue test environment
 
-> **Status: proposal only.** Recorded so the investigation behind it is not
-> lost. `specs/`, `design.md` and `tasks.md` are not yet written, so this change
-> does not validate. See "Open questions" before continuing.
+> **Status: proposal and design in progress.** Recorded so the investigation behind it is not
+> lost. `specs/` and `tasks.md` are not yet written, so this change does not yet validate.
 
 ## Why
 
@@ -33,79 +32,81 @@ Established by investigation, so it need not be re-derived:
 - **Dropping Slurm collapses the fixture's failure surface** from four
   interacting readiness conditions to one, which is the single largest
   contributor to the original debugging cost.
+- **HyperQueue provides realistic queuing without daemon overhead.** Unlike
+  `core.direct` (which runs unmanaged background processes with no queue states
+  or slot limits), HyperQueue (`aiida-hyperqueue`) provides a true modern task
+  scheduler via a single static, unprivileged binary (`hq`). It restores realistic
+  submit/queue/poll/retrieve lifecycle testing with zero system daemons, no root
+  requirements, and no munge authentication.
+- **Parallel test runners can share the HyperQueue instance.** Workflow tests
+  are mostly blocking event loops waiting on sequential steps. Parallel pytest
+  workers (`pytest-xdist`) submitting independent workflow tests to a shared
+  HyperQueue container interleave execution across available worker slots for
+  efficient test concurrency.
 
-The scheduler is not abandoned: peace of mind that scheduled computers behave
-the same moves to a human-run tutorial, where it is more useful to users anyway,
-because anyone on real HPC must configure their own computer regardless.
+The Slurm scheduler is not abandoned: peace of mind that scheduled computers
+behave the same moves to a human-run tutorial, where it is more useful to users
+anyway, because anyone on real HPC must configure their own computer regardless.
 
 ## What Changes
 
 - **Delete** `tests/container/` and `tests/slurm_support.py` and rebuild rather
   than repair. The current image carries debugging residue, duplicated setup and
   a committed private key; a replacement is smaller than the diff to fix it.
-- Build the image around an SSH daemon and a Python environment only. No munge,
-  no `slurmctld`/`slurmd`, no `slurm.conf`, no node state management.
-- Configure the AiiDA `Computer` with `core.ssh` transport and `core.direct`
-  scheduler.
+- Build a minimal container image around an SSH daemon, a static `hq` binary,
+  and a clean Python virtual environment. No munge, no `slurmctld`/`slurmd`,
+  no `slurm.conf`, no root daemon requirements.
+- Configure the container entrypoint to start `hq server` and `hq worker` as an
+  unprivileged user, and run `sshd`.
+- Configure the AiiDA `Computer` with `core.ssh` transport and `hyperqueue`
+  scheduler (via the `aiida-hyperqueue` plugin).
 - Provision the remote environment with a plain, non-editable install of the
   project, so dependency resolution is the one users are told to rely on and the
-  built distribution is exercised. The present editable install into a read-only
-  mount tests neither.
+  built distribution is exercised.
 - Generate the SSH keypair per session with aiida-core's `ssh_key` fixture and
   inject the public key at run time, removing the committed private key from the
-  repository and making the image generic. Note that only `ssh_key` is useful
-  here: the sibling `aiida_computer_ssh` factory accepts nothing but a label and
-  a configure flag, hard-codes `localhost`, and cannot express a port or
-  username, so it cannot address a container. Its docstring also claims the key
-  is added to the user's authorised keys, which nothing in aiida-core does. The
-  `Computer` is therefore constructed explicitly, which is also better material
-  for the documentation that will include it.
-- Split fixture state by kind: session-scoped connection details that survive
-  database resets, function-scoped ORM nodes that are cheap to recreate.
-- Replace the single opaque readiness poll with named, separately-reported
-  stages, and separate provisioning from readiness.
-- Let the container engine assign the published port and read it back, instead
-  of choosing one in Python beforehand — which is also what the current spec
-  already describes.
+  repository and making the image generic.
+- Support parallel test execution via `pytest-xdist`:
+  - Adopt the official `pytest-xdist` `FileLock` pattern in `tests/conftest.py`
+    to ensure the container is launched lazily and shared across all xdist
+    workers.
+  - Add test collection ordering (`pytest_collection_modifyitems`) so fast unit
+    tests execute first at full speed without waiting for container boot,
+    starting the container only when workers reach integration tests.
+  - Coordinate single teardown on the controller process via `pytest_sessionfinish`.
+- Let the container engine assign the published port dynamically and read it back,
+  preventing port collisions across parallel workers.
+- Add `aiida-hyperqueue`, `pytest-xdist`, and `filelock` to `[dependency-groups].dev`
+  in `pyproject.toml`.
 
 ## Capabilities
 
 ### Modified Capabilities
 
 - `testing-and-ci`: the three containerized-integration requirements are
-  rewritten. The scheduler is no longer part of the contract; the container's
-  purpose becomes exercising remote execution over SSH against an interpreter
-  that has no AiiDA.
+  rewritten. The scheduler is HyperQueue; the container exercises remote
+  execution over SSH against an interpreter that has no AiiDA; and the
+  fixtures are process-safe under `pytest-xdist`.
 
 ## Non-goals
 
 - **Slurm coverage in the test suite.** It moves to a human-run tutorial in
   `document-ssh-pythonjob-computers`.
-- **A queueing scheduler.** `core.direct` is sufficient because the suite runs
-  serially. HyperQueue, via the `aiida-hyperqueue` plugin, is a recorded
-  deferred upgrade: a single static binary needing no root or munge, which would
-  restore both real queueing and the asynchronous submit/poll/retrieve lifecycle
-  that `core.direct` lacks. Revisit if contention or lifecycle coverage becomes
-  a real gap.
-- **Committing to an upstream base image.** For a plain SSH box the question is
-  small enough to settle during implementation.
 - **Making the fixture runnable in a sandboxed development container.** It
   cannot be, for reasons outside this repository; see
-  `add-container-fixture-cli`.
+  `add-container-fixture-cli`. Local development continues to rely on
+  `pytest -m venv_code` for AiiDA-free interpreter verification.
 
 ## Impact
 
-- `tests/container/`, `tests/slurm_support.py`, `tests/test_remote_slurm.py`,
+- `tests/container/`, `tests/slurm_support.py` (replaced with `tests/container_support.py`),
+  `tests/test_remote_slurm.py` (renamed to `tests/test_remote_ssh.py`),
   `tests/conftest.py` fixtures, and the `testing-and-ci` spec.
+- `pyproject.toml`: adds `aiida-hyperqueue`, `pytest-xdist`, and `filelock` to `dev` group.
 - Removes a committed private key from version control.
-- No source module, dependency, entry point or public API is touched.
+- No source module, runtime dependency, entry point or public API is touched.
 
 ## Open questions
 
-- Which base image, and how much to build ourselves. Smaller than before, since
-  an sshd container is auditable in a few lines.
-- Whether any scheduler coverage should remain in the suite at all, or move
-  entirely to the tutorial.
-- Whether the SSH-only container subsumes `add-lean-remote-env-test`. It does
-  not: that runs where no container engine exists, which includes sandboxed
-  development environments.
+- Base image choice for the container (Ubuntu 22.04 minimal vs Debian bookworm-slim).
+- Core slot count allocated to the containerized `hq worker` (auto-detect vs explicit 2 cores).
