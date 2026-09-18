@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib.util
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -376,9 +377,22 @@ def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
 
     child_python = builder.env_exe
 
-    # Install the project non-editable (Decision 4)
-    # Build the pip install command
-    install_cmd = [str(child_python), "-m", "pip", "install", "--no-cache-dir"]
+    # Progressive enhancement: use uv when available on PATH for a much
+    # faster install/uninstall cycle, falling back to plain pip otherwise
+    # so the fixture stays tool-neutral (design.md Decision 1).
+    uv_executable = shutil.which("uv")
+
+    if uv_executable is not None:
+        install_cmd = [
+            uv_executable,
+            "pip",
+            "install",
+            "--python",
+            str(child_python),
+            "--no-cache",
+        ]
+    else:
+        install_cmd = [str(child_python), "-m", "pip", "install", "--no-cache-dir"]
 
     # Add --find-links if present (Decision 8)
     for link_path in find_links:
@@ -396,19 +410,34 @@ def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
         check=False,
     )
     if result.returncode != 0:
-        msg = f"Failed to install project in child environment:\n{result.stderr}"
+        msg = (
+            "Failed to install project in child environment:\n"
+            f"--- stdout ---\n{result.stdout}\n"
+            f"--- stderr ---\n{result.stderr}"
+        )
         raise RuntimeError(msg)
 
     # Uninstall aiida-core and aiida-pythonjob (Decision 4)
-    uninstall_cmd = [
-        str(child_python),
-        "-m",
-        "pip",
-        "uninstall",
-        "-y",
-        "aiida-core",
-        "aiida-pythonjob",
-    ]
+    if uv_executable is not None:
+        uninstall_cmd = [
+            uv_executable,
+            "pip",
+            "uninstall",
+            "--python",
+            str(child_python),
+            "aiida-core",
+            "aiida-pythonjob",
+        ]
+    else:
+        uninstall_cmd = [
+            str(child_python),
+            "-m",
+            "pip",
+            "uninstall",
+            "-y",
+            "aiida-core",
+            "aiida-pythonjob",
+        ]
     result = subprocess.run(
         uninstall_cmd,
         capture_output=True,
