@@ -9,11 +9,10 @@ Splitting third-party dependency installation from the package source copy allow
 ## What Changes
 
 - Refactor `tests/container/Dockerfile` into distinct caching stages:
-  1. Base OS, SSH server, and HyperQueue installation (rarely changes).
-  2. Copy `pyproject.toml` and wheels, and pre-install third-party runtime dependencies into `/home/ubuntu/venv` via `uv pip install -r pyproject.toml` (cached across code edits in both Podman/Buildah and Docker).
-  3. Copy `src/` and install `aiida-pythonjob-ins` with `--no-deps`.
-  4. Uninstall `aiida-core` and `aiida-pythonjob` to enforce the lean remote environment contract.
-- Support `CONTAINER_ENGINE` environment variable in `tests/container_support.py:detect_container_engine()`, allowing explicit selection of `docker` or `podman` while retaining `("podman", "docker")` automatic detection by default.
+  - Base OS, OpenSSH server, and HyperQueue installation (rarely changes).
+  - Pre-installation of third-party runtime dependencies from `pyproject.toml` and `wheels/` into `/home/ubuntu/venv` using `uv pip install -r pyproject.toml` (cached across code edits in both Podman/Buildah and Docker).
+  - Package source (`src/`) copied and installed with `uv pip install --no-deps .`, followed by `aiida-core` / `aiida-pythonjob` removal and purity verification.
+- Support a `CONTAINER_ENGINE` environment variable in `tests/container_support.py:detect_container_engine()`, allowing explicit selection of `docker` or `podman` while retaining `("podman", "docker")` automatic detection by default.
 - Update GitHub Actions workflow (`.github/workflows/ci.yml`) to set `CONTAINER_ENGINE: docker` and leverage official Docker Buildx actions with native layer caching (`type=gha`) across workflow runs, also verifying Docker engine compatibility in CI.
 
 ## Capabilities
