@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -22,8 +23,14 @@ logger = logging.getLogger("tests.container_support")
 
 
 def detect_container_engine() -> str | None:
-    """Return 'podman' or 'docker' if installed and operational, else None."""
-    for engine in ("podman", "docker"):
+    """Return 'podman' or 'docker' if installed and operational, else None.
+
+    If the CONTAINER_ENGINE environment variable is set (e.g. 'docker' or 'podman'),
+    it takes precedence over auto-detection order.
+    """
+    configured = os.environ.get("CONTAINER_ENGINE")
+    candidates = (configured,) if configured else ("podman", "docker")
+    for engine in candidates:
         if shutil.which(engine):
             res = subprocess.run(
                 [engine, "info"],
@@ -37,7 +44,27 @@ def detect_container_engine() -> str | None:
 
 
 def ensure_container_image(engine: str, project_root: Path) -> str:
-    """Ensure the local SSH + HyperQueue test container image is built."""
+    """Ensure the test container image is available and return its reference.
+
+    If CONTAINER_IMAGE is set in the environment (e.g. an image hash or tag),
+    verify it exists in the engine and use it directly without rebuilding.
+    """
+    if image_ref := os.environ.get("CONTAINER_IMAGE"):
+        res = subprocess.run(
+            [engine, "image", "inspect", image_ref],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if res.returncode == 0:
+            logger.info("Using pre-existing container image %r", image_ref)
+            return image_ref
+        msg = (
+            f"Container image {image_ref!r} specified via CONTAINER_IMAGE "
+            f"was not found by {engine!r}."
+        )
+        raise RuntimeError(msg)
+
     dockerfile_path = project_root / "tests" / "container" / "Dockerfile"
     res = subprocess.run(
         [
