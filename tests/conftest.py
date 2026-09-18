@@ -410,7 +410,11 @@ def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
         check=False,
     )
     if result.returncode != 0:
-        msg = f"Failed to install project in child environment:\n{result.stderr}"
+        msg = (
+            "Failed to install project in child environment:\n"
+            f"--- stdout ---\n{result.stdout}\n"
+            f"--- stderr ---\n{result.stderr}"
+        )
         raise RuntimeError(msg)
 
     # Uninstall aiida-core and aiida-pythonjob (Decision 4)
