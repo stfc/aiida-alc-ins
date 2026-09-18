@@ -44,7 +44,27 @@ def detect_container_engine() -> str | None:
 
 
 def ensure_container_image(engine: str, project_root: Path) -> str:
-    """Ensure the local SSH + HyperQueue test container image is built."""
+    """Ensure the test container image is available and return its reference.
+
+    If CONTAINER_IMAGE is set in the environment (e.g. an image hash or tag),
+    verify it exists in the engine and use it directly without rebuilding.
+    """
+    if image_ref := os.environ.get("CONTAINER_IMAGE"):
+        res = subprocess.run(
+            [engine, "image", "inspect", image_ref],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        if res.returncode == 0:
+            logger.info("Using pre-existing container image %r", image_ref)
+            return image_ref
+        msg = (
+            f"Container image {image_ref!r} specified via CONTAINER_IMAGE "
+            f"was not found by {engine!r}."
+        )
+        raise RuntimeError(msg)
+
     dockerfile_path = project_root / "tests" / "container" / "Dockerfile"
     res = subprocess.run(
         [
