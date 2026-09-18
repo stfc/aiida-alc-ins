@@ -52,7 +52,7 @@ RUN (id -u ubuntu >/dev/null 2>&1 || useradd -m -s /bin/bash ubuntu) && \
 ENV UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv
 COPY pyproject.toml uv.lock README.md LICENSE /tmp/deps/
 COPY wheels /tmp/deps/wheels
-RUN cd /tmp/deps && su - ubuntu -c "cd /tmp/deps && UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv uv sync --no-install-project --no-cache"
+RUN cd /tmp/deps && su - ubuntu -c "cd /tmp/deps && UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv uv sync --no-install-project --no-cache --no-dev"
 
 # 8. Stage 2: Copy package source and install with --no-deps, then sanitize environment
 # This layer rebuilds quickly (<2s) when src/ changes, reusing cached dependencies.
