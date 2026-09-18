@@ -10,10 +10,11 @@ Splitting third-party dependency installation from the package source copy allow
 
 - Refactor `tests/container/Dockerfile` into distinct caching stages:
   1. Base OS, SSH server, and HyperQueue installation (rarely changes).
-  2. Copy `pyproject.toml` and wheels, and pre-install third-party runtime dependencies into `/home/ubuntu/venv` (cached across code edits).
+  2. Copy `pyproject.toml` and wheels, and pre-install third-party runtime dependencies into `/home/ubuntu/venv` via `uv pip install -r pyproject.toml` (cached across code edits in both Podman/Buildah and Docker).
   3. Copy `src/` and install `aiida-pythonjob-ins` with `--no-deps`.
   4. Uninstall `aiida-core` and `aiida-pythonjob` to enforce the lean remote environment contract.
-- Update GitHub Actions workflow (`.github/workflows/ci.yml`) to leverage Docker layer caching across workflow runs.
+- Support `CONTAINER_ENGINE` environment variable in `tests/container_support.py:detect_container_engine()`, allowing explicit selection of `docker` or `podman` while retaining `("podman", "docker")` automatic detection by default.
+- Update GitHub Actions workflow (`.github/workflows/ci.yml`) to set `CONTAINER_ENGINE: docker` and leverage official Docker Buildx actions with native layer caching (`type=gha`) across workflow runs, also verifying Docker engine compatibility in CI.
 
 ## Capabilities
 
@@ -29,11 +30,12 @@ Splitting third-party dependency installation from the package source copy allow
 
 - Altering the remote execution environment contract (it remains AiiDA-free with HyperQueue).
 - Publishing pre-built container images to an external registry like GHCR.
-- Replacing the container engine detection in `tests/container_support.py`.
+- Removing Podman support (local development continues to default to and prefer Podman).
 
 ## Impact
 
 - `tests/container/Dockerfile`: Layer order and install steps.
-- `.github/workflows/ci.yml`: Docker caching configuration.
-- Speeds up local container rebuilds during development from ~25s to ~2s when only `src/` changes.
+- `tests/container_support.py`: Support `CONTAINER_ENGINE` environment variable in `detect_container_engine()`.
+- `.github/workflows/ci.yml`: Docker Buildx caching configuration and `CONTAINER_ENGINE: docker`.
+- Speeds up local container rebuilds during development from ~50s to ~2s when only `src/` changes (under both Podman and Docker).
 - Significantly reduces CI container build time and bandwidth usage.
