@@ -10,6 +10,7 @@
 
 # Re-include what the build needs
 !pyproject.toml
+!uv.lock
 !README.md
 !LICENSE
 !wheels

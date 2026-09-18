@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -22,8 +23,14 @@ logger = logging.getLogger("tests.container_support")
 
 
 def detect_container_engine() -> str | None:
-    """Return 'podman' or 'docker' if installed and operational, else None."""
-    for engine in ("podman", "docker"):
+    """Return 'podman' or 'docker' if installed and operational, else None.
+
+    If the CONTAINER_ENGINE environment variable is set (e.g. 'docker' or 'podman'),
+    it takes precedence over auto-detection order.
+    """
+    configured = os.environ.get("CONTAINER_ENGINE")
+    candidates = (configured,) if configured else ("podman", "docker")
+    for engine in candidates:
         if shutil.which(engine):
             res = subprocess.run(
                 [engine, "info"],

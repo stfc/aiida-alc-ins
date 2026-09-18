@@ -45,5 +45,20 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and cache test container
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tests/container/Dockerfile
+          tags: aiida-ssh-hq-test:latest
+          load: true
+          cache-from: type=gha,scope=container-test
+          cache-to: ${{ matrix.python-version == '3.12' && 'type=gha,mode=max,scope=container-test' || '' }}
+
       - name: Run tests
+        env:
+          CONTAINER_ENGINE: docker
         run: uv run pytest -v

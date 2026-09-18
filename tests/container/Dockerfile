@@ -35,16 +35,7 @@ RUN ARCH=$(uname -m) && \
 # 5. Install uv from official published image
 COPY --from=ghcr.io/astral-sh/uv:0.12.5 /uv /usr/local/bin/uv
 
-# 6. Copy project manifest, source, and vendored wheels
-# Build context is project root; /tmp/deps layout preserves find-links = ["wheels"]
-COPY pyproject.toml README.md LICENSE /tmp/deps/
-COPY wheels /tmp/deps/wheels
-COPY src /tmp/deps/src
-
-# 7. Create ubuntu user and build AiiDA-free Python 3.12 virtualenv
-# - Non-editable install of package into /home/ubuntu/venv
-# - Uninstalls aiida-core and aiida-pythonjob to enforce lean remote contract
-# - Verifies operations imports cleanly while aiida is absent
+# 6. Create ubuntu user and initialize AiiDA-free Python 3.12 virtualenv
 RUN (id -u ubuntu >/dev/null 2>&1 || useradd -m -s /bin/bash ubuntu) && \
     usermod -p '*' ubuntu && \
     mkdir -p /home/ubuntu/.ssh /home/ubuntu/.hq-server /tmp/aiida_run && \
@@ -53,9 +44,21 @@ RUN (id -u ubuntu >/dev/null 2>&1 || useradd -m -s /bin/bash ubuntu) && \
     chmod 0600 /home/ubuntu/.ssh/authorized_keys && \
     chown -R ubuntu:ubuntu /home/ubuntu /tmp/aiida_run && \
     chmod 0777 /tmp/aiida_run && \
-    su - ubuntu -c "uv venv --no-cache --python 3.12 /home/ubuntu/venv && \
-    cd /tmp/deps && \
-    uv pip install --no-cache --python /home/ubuntu/venv . && \
+    su - ubuntu -c "uv venv --no-cache --python 3.12 /home/ubuntu/venv"
+
+# 7. Stage 1: Copy dependency manifests and install third-party dependencies
+# This layer is heavily cached - only rebuilds when pyproject.toml, uv.lock, or wheels/ change.
+# UV_PROJECT_ENVIRONMENT tells uv where to install dependencies.
+ENV UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv
+COPY pyproject.toml uv.lock README.md LICENSE /tmp/deps/
+COPY wheels /tmp/deps/wheels
+RUN cd /tmp/deps && su - ubuntu -c "cd /tmp/deps && UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv uv sync --no-install-project --no-cache"
+
+# 8. Stage 2: Copy package source and install with --no-deps, then sanitize environment
+# This layer rebuilds quickly (<2s) when src/ changes, reusing cached dependencies.
+COPY src /tmp/deps/src
+RUN cd /tmp/deps && su - ubuntu -c "cd /tmp/deps && \
+    uv pip install --no-cache --python /home/ubuntu/venv --no-deps . && \
     uv pip uninstall --python /home/ubuntu/venv aiida-core aiida-pythonjob && \
     /home/ubuntu/venv/bin/python -c 'import aiida_pythonjob_ins.operations; import sys; assert \"aiida\" not in sys.modules'"
 
