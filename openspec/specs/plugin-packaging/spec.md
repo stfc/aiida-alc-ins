@@ -119,28 +119,3 @@ project's uv-based workflow.
   version range
 - **THEN** the installation is rejected by the declared requirement
 
-### Requirement: Euphonic installs from PyPI wherever wheels are published
-
-Euphonic SHALL be resolved from PyPI on platforms where a compatible wheel is
-published. On platforms without one, currently aarch64 Linux, a locally supplied
-wheel SHALL be used instead, without altering the declared dependency or
-affecting other platforms. The workaround SHALL be removable without any other
-change once upstream wheels become available.
-
-#### Scenario: Resolution on a platform with published wheels
-
-- **WHEN** dependencies are resolved on x86-64 Linux with no local wheel present
-- **THEN** Euphonic is installed from PyPI
-
-#### Scenario: Resolution on aarch64 with a supplied wheel
-
-- **WHEN** dependencies are resolved on aarch64 Linux and a compatible Euphonic
-  wheel has been placed in the project's local wheel directory
-- **THEN** that wheel is used to satisfy the Euphonic requirement
-
-#### Scenario: The requirement for a local wheel is documented
-
-- **WHEN** a developer sets up the project on a platform with no published wheel
-- **THEN** the README tells them to obtain and place the wheel themselves, since it
-  is deliberately not committed to the repository
-
