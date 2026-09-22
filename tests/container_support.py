@@ -157,7 +157,7 @@ class SSHContainer:
             "--name",
             self.container_name,
             "-p",
-            "127.0.0.1::2222",
+            f"127.0.0.1::{SSH_PORT}",
             "-v",
             f"{self.keypair.public_key.resolve()}:/home/ubuntu/.ssh/authorized_keys:ro,Z",
             image_tag,
