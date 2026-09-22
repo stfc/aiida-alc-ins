@@ -1,8 +1,3 @@
-# Vendored Euphonic aarch64 wheel: a local-only workaround until aarch64 wheels
-# are published to PyPI. CI (x86-64) never needs it, so it is not committed.
-# aarch64 developers must extract the wheel here themselves (see README.md).
-wheels/*.whl
-
 # Python / build artefacts
 __pycache__/
 *.pyc

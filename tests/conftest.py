@@ -16,7 +16,6 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import tomllib
 import venv
 from pathlib import Path
 
@@ -41,16 +40,14 @@ class AiiDAFreeEnvBuilder(venv.EnvBuilder):
     See design.md Decision 3 and Decision 4 for rationale.
     """
 
-    def __init__(self, project_root: Path, find_links: list[str] | None = None) -> None:
+    def __init__(self, project_root: Path) -> None:
         """Initialize the builder.
 
         Args:
             project_root: Path to the project root (for pip install .)
-            find_links: Optional list of --find-links directories for wheels
         """
         super().__init__(with_pip=True, symlinks=True)
         self.project_root = project_root
-        self.find_links = find_links or []
         self.env_exe: Path | None = None
 
     def post_setup(self, context: venv.SimpleNamespace) -> None:
@@ -59,23 +56,6 @@ class AiiDAFreeEnvBuilder(venv.EnvBuilder):
         Captures the child interpreter path and installs the project.
         """
         self.env_exe = Path(context.env_exe)
-
-
-def get_find_links_from_pyproject(pyproject_path: Path) -> list[str]:
-    """Read [tool.uv] find-links from pyproject.toml.
-
-    Args:
-        pyproject_path: Path to pyproject.toml
-
-    Returns:
-        List of find-links directories (empty if not present)
-    """
-    try:
-        with pyproject_path.open("rb") as f:
-            data = tomllib.load(f)
-        return data.get("tool", {}).get("uv", {}).get("find-links", [])
-    except (FileNotFoundError, KeyError):
-        return []
 
 
 # Redirect AiiDA's configuration to an ephemeral, pytest-owned directory so the
@@ -359,15 +339,14 @@ def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
     if not _check_ensurepip_available():
         pytest.skip("ensurepip not available - cannot create child environment")
 
-    # Get project root and find-links
+    # Get project root
     project_root = Path(__file__).resolve().parent.parent
-    find_links = get_find_links_from_pyproject(project_root / "pyproject.toml")
 
     # Create venv directory under tmp_path_factory
     venv_dir = tmp_path_factory.mktemp("venv_child")
 
     # Create the environment using our custom builder (Decision 3)
-    builder = AiiDAFreeEnvBuilder(project_root=project_root, find_links=find_links)
+    builder = AiiDAFreeEnvBuilder(project_root=project_root)
     builder.create(venv_dir)
 
     # The builder should have captured env_exe
@@ -393,12 +372,6 @@ def venv_child_environment(tmp_path_factory: pytest.TempPathFactory):
         ]
     else:
         install_cmd = [str(child_python), "-m", "pip", "install", "--no-cache-dir"]
-
-    # Add --find-links if present (Decision 8)
-    for link_path in find_links:
-        # Resolve relative to project root
-        abs_link = project_root / link_path
-        install_cmd.extend(["--find-links", str(abs_link)])
 
     # Install the project
     install_cmd.append(str(project_root))

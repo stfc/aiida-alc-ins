@@ -13,7 +13,7 @@ name = "aiida-pythonjob-ins"
 version = "0.1.0"
 description = "Proof-of-concept AiiDA plugin wrapping INS Python libraries (Euphonic first) via aiida-pythonjob."
 readme = "README.md"
-# Relaxed to >=3.11 for Python version compatibility (local aarch64 wheel needs cp312)
+# Relaxed to >=3.11 for broad Python version compatibility
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
@@ -36,8 +36,7 @@ dependencies = [
     # https://euphonic.readthedocs.io
     # The `phonopy-reader` extra (h5py + PyYAML) is default-on so phonopy input
     # works out of the box, and its spec stays consistent with the euphonic
-    # version in use. Pinned to 2.x. On aarch64-Linux, local wheels in wheels/
-    # are found via tool.uv.find-links.
+    # version in use. Pinned to 2.x.
     "euphonic[phonopy-reader]~=2.0",
     # seekpath: we call `get_explicit_k_path_orig_cell` (the *_orig_cell path is
     # almost always preferable to the older get_*_path). 2.2.1 also carries
@@ -95,13 +94,6 @@ doc = [
 "pythonjob_ins.dos" = "aiida_pythonjob_ins.workflows.dos:DosWorkChain"
 "pythonjob_ins.tosca_from_modes" = "aiida_pythonjob_ins.workflows.tosca:ToscaFromModesWorkChain"
 "pythonjob_ins.tosca_from_force_constants" = "aiida_pythonjob_ins.workflows.tosca:ToscaFromForceConstantsWorkChain"
-
-# --- Euphonic wheel workaround (aarch64-Linux only) ----------------------------
-# On aarch64-Linux, PyPI has no 2.x wheel yet. `find-links = ["wheels"]` allows uv
-# to find local wheels placed in `wheels/` on aarch64, while on x86_64 CI (where
-# wheels/ is empty or missing), uv installs euphonic directly from PyPI.
-[tool.uv]
-find-links = ["wheels"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
