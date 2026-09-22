@@ -8,15 +8,14 @@ context: |
   and an exemplar: clarity, idiomatic AiiDA usage and well-cited comments matter
   more than feature coverage.
 
-  Stack: Python 3.12 (pinned by the vendored Euphonic wheel); `uv` for
+  Stack: Python 3.12; `uv` for
   environments and dependencies; `pytest` with `aiida.tools.pytest_fixtures`
   (SQLite backend, so no PostgreSQL); `ruff` for lint and format; Sphinx with
   sphinx-autoapi, sphinx-gallery and the furo theme for docs; GitHub Actions on
   x86-64.
 
   Key dependencies: `aiida-core>=2.6,<3`, `aiida-pythonjob~=0.5.2`,
-  `euphonic~=2.0` (aarch64 Linux installs a vendored pre-release wheel from
-  `wheels/` until an aarch64 wheel reaches PyPI), `seekpath>=2.2.1,<3`.
+  `euphonic~=2.0`, `seekpath>=2.2.1,<3`.
 
   Architecture:
   - `operations.py` -- pure Euphonic functions; its import chain is deliberately
@@ -83,9 +82,6 @@ operations:
     guidance:
       - Run `uv run pytest` and `uv run ruff check` before marking implementation
         tasks complete.
-      - On aarch64 the vendored Euphonic wheel must be present in `wheels/`
-        before `uv sync` will succeed; ask the user to supply it rather than
-        working around the dependency.
   archive:
     guidance:
       - Keep the specs the single source of truth for behaviour. Where an

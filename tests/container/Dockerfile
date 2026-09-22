@@ -54,11 +54,10 @@ RUN (id -u ubuntu >/dev/null 2>&1 || useradd -m -s /bin/bash ubuntu) && \
     su - ubuntu -c "uv venv --no-cache --python 3.12 /home/ubuntu/venv"
 
 # 7. Stage 1: Copy dependency manifests and install third-party dependencies
-# This layer is heavily cached - only rebuilds when pyproject.toml, uv.lock, or wheels/ change.
+# This layer is heavily cached - only rebuilds when pyproject.toml or uv.lock change.
 # UV_PROJECT_ENVIRONMENT tells uv where to install dependencies.
 ENV UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv
 COPY pyproject.toml uv.lock README.md LICENSE /tmp/deps/
-COPY wheels /tmp/deps/wheels
 RUN cd /tmp/deps && su - ubuntu -c "cd /tmp/deps && UV_PROJECT_ENVIRONMENT=/home/ubuntu/venv uv sync --no-install-project --no-cache --no-dev"
 
 # 8. Stage 2: Copy package source and install with --no-deps, then sanitize environment

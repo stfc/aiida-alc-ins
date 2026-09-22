@@ -68,24 +68,6 @@ To run tests sequentially (e.g. for debugging or clearer tracebacks):
 uv run pytest -n 0
 ```
 
-### aarch64 Euphonic wheel (local workaround)
-
-Euphonic is pinned to `~=2.0`. On **aarch64-Linux**, PyPI has no 2.x wheel yet,
-so `uv` finds a local 2.0.x pre-release wheel in `wheels/` via `tool.uv.find-links`
-in `pyproject.toml`. On x86-64 CI (where `wheels/` is empty or missing), `uv` installs
-Euphonic 2.x directly from PyPI normally.
-
-The wheel is **not** committed (see `.gitignore`). On aarch64-Linux, place it
-manually:
-
-```bash
-mkdir -p wheels
-# extract euphonic-...aarch64.whl into wheels/
-```
-
-Once an aarch64-Linux Euphonic 2.x wheel is published, delete the `[tool.uv]`
-block from `pyproject.toml`.
-
 ## What's implemented
 
 - **Custom data types**: `ForceConstantsData`, `QpointPhononModesData`,
