@@ -54,16 +54,19 @@ This project uses [`uv`](https://docs.astral.sh/uv/) and Python 3.12.
 
 ```bash
 uv sync          # create .venv and install deps (+ dev group)
-uv run pytest    # run the test suite
+uv run pytest    # run the test suite (parallel by default)
 ```
 
-To run non-containerized tests in parallel ad-hoc:
+Test execution is parallel by default, using `pytest-xdist` to run
+across all available CPU cores. The containerized integration tests
+are xdist-safe use a file lock to coordinate a shared container across
+workers (see `conftest.py`).
+
+To run tests sequentially (e.g. for debugging or clearer tracebacks):
 
 ```bash
-uv run --with pytest-xdist pytest -n auto -m "not containerized"
+uv run pytest -n 0
 ```
-
-*(Note: containerized tests are excluded because their session-scoped container fixture is not yet xdist-safe.)*
 
 ### aarch64 Euphonic wheel (local workaround)
 

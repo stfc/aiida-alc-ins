@@ -17,3 +17,8 @@
 
 - [x] 4.1 Run `uv run ruff check` and `uv run ruff format --check` across `tests/` to verify lint and formatting compliance.
 - [x] 4.2 Benchmark `tests/test_workflows.py` and verify reduced test suite execution walltime.
+
+## 5. Documentation Updates
+
+- [x] 5.1 Update testing instructions in `README.md` to reflect default parallel execution via `pytest-xdist` and document `-n 0` for sequential debugging.
+- [x] 5.2 Update `docs/source/design_notes.rst` to reflect default `pytest-xdist` concurrency, file-locked container fixtures, and sequential execution with `-n 0`. Verify Sphinx documentation builds cleanly via `uv run --group doc make -C docs html`.
