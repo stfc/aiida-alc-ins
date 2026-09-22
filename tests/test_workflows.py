@@ -205,35 +205,6 @@ def test_tosca_from_modes_workchain(python_code, ethanol_modes_json):
     assert len(calcjobs) == 1
 
 
-def test_tosca_from_modes_grouping_changes_line_count(python_code, ethanol_modes_json):
-    """Different group_by keys change the number of lines in `spectrum`."""
-    modes_node = QpointPhononModesData.from_json_file(ethanol_modes_json)
-
-    _, node_by_symbol = run_get_node(
-        ToscaFromModesWorkChain,
-        modes=modes_node,
-        energy_spacing=Float(50.0),
-        detector_angles=List(list=[135.0]),
-        group_by=List(list=["atom_symbol"]),
-        code=python_code,
-    )
-    assert node_by_symbol.is_finished_ok, node_by_symbol.exit_status
-    by_symbol = node_by_symbol.outputs.spectrum
-    assert len(by_symbol.get_y()) == 3  # C, O, H
-
-    _, node_by_order = run_get_node(
-        ToscaFromModesWorkChain,
-        modes=modes_node,
-        energy_spacing=Float(50.0),
-        detector_angles=List(list=[135.0]),
-        group_by=List(list=["quantum_order"]),
-        code=python_code,
-    )
-    assert node_by_order.is_finished_ok, node_by_order.exit_status
-    by_order = node_by_order.outputs.spectrum
-    assert len(by_order.get_y()) == 2  # fundamentals + combinations
-
-
 def test_tosca_from_modes_grouped_intensity_is_conserved(
     python_code, ethanol_modes_json
 ):
@@ -303,7 +274,10 @@ def test_tosca_from_modes_regrouping_reuses_the_cached_intensities(
     calcjobs2 = [p for p in node2.called_descendants if isinstance(p, CalcJobNode)]
     assert len(calcjobs2) == 1
     assert calcjobs2[0].base.caching.is_created_from_cache
-    # The newly grouped result is still produced and provenance-linked.
+    # The first grouping (by atom_symbol) and the second (by quantum_order) each
+    # produce a spectrum whose line count reflects the grouping key: 3 lines for
+    # the distinct atom symbols (C, O, H) and 2 for fundamentals + combinations.
+    assert len(node1.outputs.spectrum.get_y()) == 3  # C, O, H
     assert len(results2["spectrum"].get_y()) == 2  # fundamentals + combinations
 
 
@@ -366,13 +340,15 @@ def test_tosca_from_force_constants_failure_is_distinguishable(
     Simulated by requesting an energy_max so small that no positive-energy bin
     survives clipping, which starves the intensity calculation of any bins and
     fails the sub-workchain's PythonJob rather than this workflow's own
-    force-constants step.
+    interpolation step.
     """
-    castep_file = SinglefileData(quartz_castep_bin)
+
+    # Quickly prepare FC outside of the workchain
+    fc_node = ForceConstantsData(ForceConstants.from_castep(quartz_castep_bin))
 
     _, node = run_get_node(
         ToscaFromForceConstantsWorkChain,
-        castep_file=castep_file,
+        force_constants=fc_node,
         q_spacing=Float(1.0),
         spectrum={
             "energy_spacing": Float(50.0),

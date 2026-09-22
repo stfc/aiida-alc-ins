@@ -147,18 +147,28 @@ Useful Practices in conftest.py
 5. **Data fixtures**: ``conftest.py`` is also the right place to set up shared pytest fixtures used
    across multiple test files. If a fixture is only used in one file, define it there instead.
 
-Parallel Test Execution (Ad-Hoc)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parallel Test Execution
+~~~~~~~~~~~~~~~~~~~~~~~
 
-The project does not declare ``pytest-xdist`` in default dev dependencies because session-scoped
-fixtures (such as containerized integration test fixtures) are not process-isolated or locked.
+The project runs tests in parallel by default. ``pytest-xdist`` is declared in the
+default dev dependencies, and ``pyproject.toml`` sets ``addopts = ["-n", "auto"]``
+under ``[tool.pytest.ini_options]``, so ``uv run pytest`` distributes the suite
+across all available CPU cores without extra flags.
 
-Contributors wishing to run non-containerized unit tests in parallel can invoke ``pytest-xdist``
-ad-hoc via ``uv``:
+The containerized integration tests use a session-scoped
+``remote_container_info`` fixture to coordinate a single shared
+SSH/HyperQueue container across worker processes. This is implemented
+with a ``filelock.FileLock`` on a shared ``container_info.json``
+(written by the first worker, reused by the rest), and a
+``pytest_sessionfinish`` hook tears the container down from the
+controller process only. A ``worker_id`` stub is provided for runs
+without xdist. Simpler mechanisms are likely possible: the main thing
+is to avoid spawining one container per xdist worker, and instead let
+hyperqueue manage jobs from the workers against available CPU resources.
+
+To run tests sequentially (e.g. for debugging or clearer tracebacks), pass
+``-n 0`` to disable the worker pool:
 
 .. code-block:: bash
 
-   uv run --with pytest-xdist pytest -n auto -m "not containerized"
-
-Containerized tests are excluded (``-m "not containerized"``) because their session-scoped
-container fixture is not yet xdist-safe.
+   uv run pytest -n 0

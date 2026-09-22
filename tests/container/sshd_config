@@ -1,4 +1,8 @@
-Port 22
+# Non-privileged port: a rootless container engine (e.g. nested podman) cannot
+# bind ports < 1024, so sshd listens on 2222 rather than 22. The host-side
+# published port is still dynamically assigned, so callers connect via that, not
+# this port directly. Harmless under rootful engines (e.g. CI's docker).
+Port 2222
 HostKey /etc/ssh/ssh_host_rsa_key
 HostKey /etc/ssh/ssh_host_ecdsa_key
 HostKey /etc/ssh/ssh_host_ed25519_key
