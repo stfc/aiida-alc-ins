@@ -19,6 +19,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 LOCAL_IMAGE_TAG = "aiida-ssh-hq-test:latest"
+# Non-privileged SSH port the test container's sshd listens on. A rootless engine
+# (e.g. nested podman) cannot bind ports < 1024, so this is 2222 rather than 22.
+# The host-side published port is dynamically assigned (see `host_port`), so
+# callers never connect to this port directly. Harmless under rootful engines.
+SSH_PORT = 2222
 logger = logging.getLogger("tests.container_support")
 
 
@@ -90,7 +95,9 @@ def ensure_container_image(engine: str, project_root: Path) -> str:
     return LOCAL_IMAGE_TAG
 
 
-def query_host_port(engine: str, container_name: str, container_port: int = 22) -> int:
+def query_host_port(
+    engine: str, container_name: str, container_port: int = SSH_PORT
+) -> int:
     """Query the runtime-assigned host port published for a container port."""
     cmd = [engine, "port", container_name, f"{container_port}/tcp"]
     out = subprocess.check_output(cmd, text=True).strip()
@@ -150,7 +157,7 @@ class SSHContainer:
             "--name",
             self.container_name,
             "-p",
-            "127.0.0.1::22",
+            "127.0.0.1::2222",
             "-v",
             f"{self.keypair.public_key.resolve()}:/home/ubuntu/.ssh/authorized_keys:ro,Z",
             image_tag,
@@ -186,7 +193,7 @@ class SSHContainer:
             raise RuntimeError(msg)
 
         # 5. Resolve dynamically assigned host port
-        self.host_port = query_host_port(self.engine, self.container_name, 22)
+        self.host_port = query_host_port(self.engine, self.container_name, SSH_PORT)
 
         # 6. Poll for SSH and HyperQueue readiness
         self._wait_for_readiness(timeout)
