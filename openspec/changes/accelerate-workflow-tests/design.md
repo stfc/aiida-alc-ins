@@ -15,13 +15,20 @@ In `tests/test_workflows.py`, 13 tests take over 70s locally and ~120s on a 2-vC
 
 ## Decisions
 
-### Decision 1: Aggressive transport and computer polling in test fixtures
-- In `conftest.py`, ensure test computers (`aiida_localhost`, `remote_computer`) configure `set_minimum_job_poll_interval(0.1)` and `safe_interval = 0.0`.
-- Verify runner polling frequency is tuned for test execution rather than production cluster conservativeness.
+### Decision 1: Test Suite Runner & Engine Latency Verification
+- Empirical profiling confirmed `Runner._poll_interval = 0.0` and `aiida_localhost` poll interval is 0s by default under the test profile.
+- Test suite runtime is primarily bounded by sequential execution of 23 `PythonJob` CalcJobs (~2.5–2.8s base overhead each from subprocess creation, Python interpreter startup, scientific library imports, and SQLite state commits).
 
-### Decision 2: Minimal science workloads for structural and exit-code tests
-- `test_tosca_from_force_constants_failure_is_distinguishable`: Currently runs a full CASTEP read and mode interpolation before failing in the delegated spectrum workchain. Providing a pre-computed or minimal mock/small `modes` input, or bypassing the heavy force constants read step, saves ~7–8s in this test alone.
-- Use coarser q-spacing (e.g. `q_spacing=Float(1.5)` or `Float(2.0)`) and energy bin widths in tests whose assertions verify node types, output counts, or exit statuses rather than numeric integration convergence.
+### Decision 2: Shortcutting Multi-Step Setup in Exit-Code Tests
+- In `test_tosca_from_force_constants_failure_is_distinguishable`, pass a prepared `ForceConstantsData` node instantiated directly from `quartz_castep_bin` (`ForceConstants.from_castep()`, taking ~0.11s in-memory).
+- This skips the preliminary CASTEP-reading `PythonJob` (~2.8s) while testing mode interpolation and the delegated `ToscaFromModesWorkChain` failure, preserving the exact exit code assertion (`ERROR_SPECTRUM_WORKCHAIN_FAILED`, 401).
 
-### Decision 3: Expose configurable parameters where needed
-- If any internal workflow step hardcodes sampling densities or bounds that prevent callers from scaling down problem sizes, expose them as optional inputs with sensible defaults matching existing behavior.
+### Decision 3: Consolidate Redundant TOSCA Grouping Tests
+- `test_tosca_from_modes_grouping_changes_line_count` ran two full uncached workflows (grouped by `atom_symbol` and `quantum_order`) taking ~7.3s.
+- `test_tosca_from_modes_regrouping_reuses_the_cached_intensities` already executes those exact two workflows under caching.
+- Fold the line count assertions (`len(node1.outputs.spectrum.get_y()) == 3` and `2`) directly into the caching test and remove `test_tosca_from_modes_grouping_changes_line_count`, saving ~7.3s without loss of coverage.
+
+### Decision 4: Preserve Realistic Science Meshes in Dispersion and TOSCA Tests
+- Keep 1D band paths for dispersion intact (~100 points along high-symmetry lines; linear scaling completes in <0.05s).
+- Keep the 8-point 3D grid (`q_spacing=1.0`) in TOSCA Fourier interpolation to maintain zone-boundary and multi-q-point coverage without measurable performance penalty.
+- Keep `src/` interfaces untouched; defer exposing `adaptive_method` or new workchain inputs to a dedicated feature issue.
