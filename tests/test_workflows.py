@@ -277,10 +277,7 @@ def test_tosca_from_modes_regrouping_reuses_the_cached_intensities(
     # The first grouping (by atom_symbol) and the second (by quantum_order) each
     # produce a spectrum whose line count reflects the grouping key: 3 lines for
     # the distinct atom symbols (C, O, H) and 2 for fundamentals + combinations.
-    # Folding these assertions here covers the line-count behaviour that the
-    # now-removed duplicate uncached test asserted, while keeping the cached run.
     assert len(node1.outputs.spectrum.get_y()) == 3  # C, O, H
-    # The newly grouped result is still produced and provenance-linked.
     assert len(results2["spectrum"].get_y()) == 2  # fundamentals + combinations
 
 
@@ -344,11 +341,9 @@ def test_tosca_from_force_constants_failure_is_distinguishable(
     survives clipping, which starves the intensity calculation of any bins and
     fails the sub-workchain's PythonJob rather than this workflow's own
     interpolation step.
-
-    A prepared ``ForceConstantsData`` node is supplied directly so the test skips
-    the preliminary CASTEP-reading PythonJob while still exercising the mode
-    interpolation and the delegated ``ToscaFromModesWorkChain`` failure path.
     """
+
+    # Quickly prepare FC outside of the workchain
     fc_node = ForceConstantsData(ForceConstants.from_castep(quartz_castep_bin))
 
     _, node = run_get_node(
