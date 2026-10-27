@@ -46,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `PythonJob`. This removes about 2.8 s of job overhead from a read that takes
   about 0.1 s. `prepare_read_force_constants_inputs` remains available as an
   example of `PythonJob` file staging.
+- Workflow pages now render each WorkChain's docstring as formatted
+  reStructuredText, so exit-code lists, inline literals and cross-references
+  between workflows appear as rendered documentation rather than raw source.
 
 ### Removed
 

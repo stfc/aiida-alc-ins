@@ -15,7 +15,7 @@ offers no force-constants source at all -- see the worked
 
 These pages are generated from the live process **spec** by AiiDA's
 ``aiida-workchain`` directive, showing the inputs, outputs, and outline, with
-exit codes documented in the class reference.
+exit codes listed in each workflow's description.
 
 .. aiida-workchain:: ForceConstantsWorkChain
    :module: aiida_pythonjob_ins.workflows.force_constants

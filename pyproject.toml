@@ -187,6 +187,7 @@ ignore = [
 # Sphinx config: not a package; profile bootstrap runs before imports; event
 # handlers have fixed signatures with unused args.
 "docs/source/conf.py" = ["INP001", "E402", "ARG001"]
+"docs/source/_ext/*" = ["INP001"]
 "docs/source/tutorials/*" = [
     "INP001",  # gallery scripts are not an importable package
     "E402",    # sphinx-gallery examples interleave prose cells and imports

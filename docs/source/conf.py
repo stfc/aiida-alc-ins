@@ -8,7 +8,9 @@ https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import importlib.metadata
 import os
+import sys
 import tempfile
+from pathlib import Path
 
 # The ``aiida-workchain`` directive imports the workflow classes and calls
 # ``load_profile()``, so the build needs an AiiDA profile. Point AIIDA_PATH at a
@@ -20,6 +22,9 @@ from aiida.storage.sqlite_temp import SqliteTempBackend
 
 get_config(create=True)
 load_profile(SqliteTempBackend.create_profile("docs"), allow_switch=True)
+
+# Local Sphinx extensions live in ``_ext``.
+sys.path.insert(0, str(Path(__file__).resolve().parent / "_ext"))
 
 project = "aiida-pythonjob-ins"
 copyright = "2026, STFC"  # noqa: A001
@@ -33,7 +38,7 @@ extensions = [
     "myst_parser",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "aiida.sphinxext",  # `.. aiida-workchain::` directive (documents the spec)
+    "workchain_docs",  # rendered `.. aiida-workchain::` directive (local subclass)
 ]
 
 templates_path = ["_templates"]
@@ -110,6 +115,7 @@ sphinx_gallery_conf = {
 # -- Napoleon (Google-style docstrings) --------------------------------------
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
+napoleon_custom_sections = ["Exit Codes"]
 
 
 def _skip_workchains(app, what, name, obj, skip, options):
