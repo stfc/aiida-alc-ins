@@ -25,7 +25,7 @@ jobs:
           python-version: "3.12"
 
       - name: Build documentation
-        run: uv run --group doc make -C docs html
+        run: uv run --group doc make -C docs html SPHINXOPTS="-W --keep-going"
 
       - name: Upload Pages artifact
         if: github.event_name == 'workflow_dispatch'
