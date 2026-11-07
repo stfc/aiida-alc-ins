@@ -226,7 +226,7 @@ Notes for the implementer:
 
 ## 5. Integration checks
 
-- [ ] 5.1 Run `uv run pytest`, `uv run ruff check` and
+- [x] 5.1 Run `uv run pytest`, `uv run ruff check` and
   `uv run ruff format --check`. Verify that all three pass.
 - [x] 5.2 Run `openspec validate add-phonopy-force-constants-source` (from
   `/workspace` or `/workspace/aiida_pythonjob_ins`). Run `git status` in
