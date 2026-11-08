@@ -330,8 +330,6 @@ upstream names. They come from `pace-neutrons/Euphonic` at commit
 
 Download URL pattern:
 `https://raw.githubusercontent.com/pace-neutrons/Euphonic/1d86683518f248f621539c2ddcbf7964b061b439/tests_and_analysis/test/data/phonopy_files/NaCl/<file>`.
-Euphonic is licensed GPL-3.0 (its `LICENSE` file), and this project is
-GPL-3.0-or-later.
 
 **(verified)** facts about this set:
 
@@ -352,7 +350,7 @@ Coverage:
 
 Record the provenance in `tests/data/README.md` with one `##` section for the
 directory, following the existing `ethanol_qpoint_phonon_modes.json` entry:
-Origin, Upstream commit, Licence, and a SHA-256 line per file.
+Origin, Upstream commit, and a SHA-256 line per file.
 
 ### 7. The gallery example uses the workflow route
 

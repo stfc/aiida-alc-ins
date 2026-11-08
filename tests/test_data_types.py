@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 from aiida.orm import StructureData
 from euphonic import ForceConstants
+from tests.assertions import assert_equivalent_force_constants
 
 from aiida_pythonjob_ins.data import (
     EuphonicCrystalData,
@@ -27,10 +28,7 @@ def test_force_constants_roundtrip(aiida_profile, quartz_castep_bin):
     reloaded = node.get_force_constants()
 
     assert reloaded.crystal.n_atoms == original.crystal.n_atoms
-    np.testing.assert_allclose(
-        reloaded.force_constants.magnitude,
-        original.force_constants.magnitude,
-    )
+    assert_equivalent_force_constants(reloaded, original)
 
 
 def test_force_constants_from_castep_classmethod(aiida_profile, quartz_castep_bin):

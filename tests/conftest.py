@@ -172,6 +172,12 @@ def phonopy_dir() -> Path:
 
 
 @pytest.fixture
+def phonopy_hdf5_dir() -> Path:
+    """Directory of the bundled NaCl HDF5 Phonopy example (from the Euphonic suite)."""
+    return DATA_DIR / "phonopy" / "NaCl_hdf5"
+
+
+@pytest.fixture
 def phonopy_files(phonopy_dir) -> dict[str, str]:
     """Phonopy summary/force-constants/born file paths (as strings)."""
     return {

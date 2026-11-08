@@ -161,10 +161,19 @@ def prepare_read_phonopy_inputs(
 ) -> dict[str, Any]:
     """Build inputs to run :func:`read_force_constants_from_phonopy` as a PythonJob.
 
-    The Phonopy ``summary`` (``phonopy.yaml``), ``force_constants`` (e.g.
-    ``FORCE_CONSTANTS``) and optional ``born`` (``BORN``) files are staged into the
-    working directory via ``upload_files``; the function reads them by basename and
-    returns a ``ForceConstants`` serialized to a ``ForceConstantsData`` node.
+    .. note::
+       This builder demonstrates ``PythonJob`` file staging; none of this
+       package's workflows use it. Workflows read Phonopy files in-process
+       through the ``force_constants.phonopy`` input instead: the read takes a
+       fraction of a second, so dispatching it as a job adds overhead without
+       benefit. This builder is likely to be removed before version 1.0.
+
+    The Phonopy ``summary`` (``phonopy.yaml``), ``force_constants`` and optional
+    ``born`` (``BORN``) files are staged into the working directory via
+    ``upload_files``; the function reads them by basename and returns a
+    ``ForceConstants`` serialized to a ``ForceConstantsData`` node. The
+    force-constants file may be HDF5 (file name ending ``.hdf5``, ``.hd5`` or
+    ``.h5``) or Phonopy text format (e.g. ``FORCE_CONSTANTS``).
 
     Parameters
     ----------

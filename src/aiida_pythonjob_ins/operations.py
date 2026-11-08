@@ -107,6 +107,11 @@ def read_force_constants_from_phonopy(
     staged there via ``upload_files`` (see
     :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_phonopy_inputs`).
 
+    ``fc_name`` may be HDF5 (file name ending ``.hdf5``, ``.hd5`` or ``.h5``) or
+    Phonopy text format. This function exists to be run by
+    :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_phonopy_inputs`, and is
+    likely to be removed with it before version 1.0.
+
     ``born_name`` is optional (Born charges for LO-TO splitting); pass ``None`` to
     skip it.
     """

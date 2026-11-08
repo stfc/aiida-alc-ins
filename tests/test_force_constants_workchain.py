@@ -6,11 +6,11 @@ jobs and takes no ``code`` or ``options`` input.
 
 from __future__ import annotations
 
-import numpy as np
 import pytest
 from aiida.engine import run_get_node
 from aiida.orm import CalcFunctionNode, SinglefileData
 from euphonic import ForceConstants
+from tests.assertions import assert_equivalent_force_constants
 
 from aiida_pythonjob_ins.data import ForceConstantsData
 from aiida_pythonjob_ins.workflows.force_constants import ForceConstantsWorkChain
@@ -48,10 +48,9 @@ def test_castep_file_gives_equivalent_force_constants(quartz_castep_bin):
 
     # Equivalent to a direct public-API read on the same file.
     expected = ForceConstants.from_castep(quartz_castep_bin)
-    got = results["force_constants"].get_force_constants()
-    np.testing.assert_allclose(got.force_constants, expected.force_constants)
-    np.testing.assert_allclose(got.crystal.cell_vectors, expected.crystal.cell_vectors)
-    np.testing.assert_allclose(got.crystal.atom_r, expected.crystal.atom_r)
+    assert_equivalent_force_constants(
+        results["force_constants"].get_force_constants(), expected
+    )
 
 
 def test_node_is_passed_through(quartz_castep_bin):

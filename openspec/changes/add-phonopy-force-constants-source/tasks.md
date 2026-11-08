@@ -13,14 +13,14 @@ Notes for the implementer:
 
 ## 1. Sample data and reader spike
 
-- [ ] 1.1 Create `tests/data/phonopy/NaCl_hdf5/` and download the four files
+- [x] 1.1 Create `tests/data/phonopy/NaCl_hdf5/` and download the four files
   listed in design.md Decision 6 from the pinned upstream commit, using the URL
   pattern given there. For example:
   `curl -fO <url>` for each of `phonopy_nofc_noborn.yaml`,
   `force_constants.hdf5`, `BORN_nacl` and `phonopy_nacl.yaml`. Append a
   `## phonopy/NaCl_hdf5/` section to `tests/data/README.md`, in the same style
   as the ethanol entry: a short description, Origin (upstream repo and path),
-  Upstream commit, Licence, and one SHA-256 line per file. Verify that
+  Upstream commit, and one SHA-256 line per file. Verify that
   `sha256sum tests/data/phonopy/NaCl_hdf5/*` prints exactly the four checksums
   in design.md Decision 6.
 - [x] 1.2 Spike, done during planning with throwaway scripts that have been
@@ -35,10 +35,10 @@ Notes for the implementer:
 
 ## 2. Library-level HDF5 coverage
 
-- [ ] 2.1 In `tests/conftest.py`, add a `phonopy_hdf5_dir` fixture returning
+- [x] 2.1 In `tests/conftest.py`, add a `phonopy_hdf5_dir` fixture returning
   `DATA_DIR / "phonopy" / "NaCl_hdf5"`, with a one-line docstring naming its
   source. Model it on the existing `phonopy_dir` fixture.
-- [ ] 2.2 In `tests/test_operations.py`, add
+- [x] 2.2 In `tests/test_operations.py`, add
   `test_read_force_constants_from_phonopy_hdf5(phonopy_hdf5_dir, monkeypatch)`:
   - `monkeypatch.chdir(phonopy_hdf5_dir)`;
   - call `read_force_constants_from_phonopy(summary_name="phonopy_nofc_noborn.yaml",
@@ -50,7 +50,7 @@ Notes for the implementer:
 
   Verify with
   `uv run pytest tests/test_operations.py -k phonopy_hdf5`.
-- [ ] 2.3 Docstring-only edits; do not change any code:
+- [x] 2.3 Docstring-only edits; do not change any code:
   - In `src/aiida_pythonjob_ins/pythonjobs.py` (`prepare_read_phonopy_inputs`),
     add the `.. note::` block from design.md Decision 8 after the summary line,
     in the same position as the note in `prepare_read_force_constants_inputs`.
@@ -68,7 +68,7 @@ Notes for the implementer:
 
 ## 3. Phonopy source on `ForceConstantsWorkChain`
 
-- [ ] 3.1 In `src/aiida_pythonjob_ins/workflows/force_constants.py`:
+- [x] 3.1 In `src/aiida_pythonjob_ins/workflows/force_constants.py`:
   - add `import contextlib` and `import yaml`;
   - add the module constant `PHONOPY_READ_ERRORS`;
   - add the `read_phonopy_force_constants` calcfunction, exactly as in design.md
@@ -84,7 +84,7 @@ Notes for the implementer:
   Verify that `uv run python -c "from aiida_pythonjob_ins.workflows.force_constants import read_phonopy_force_constants"`
   succeeds. If the `| None` annotations fail, apply the fallback in design.md
   Risks.
-- [ ] 3.2 In `tests/test_workflows.py`:
+- [x] 3.2 In `tests/test_workflows.py`:
   - add a module-level helper `_assert_equivalent_force_constants(actual,
     expected)`, taking two `euphonic.ForceConstants`. It uses
     `np.testing.assert_allclose` on `force_constants.magnitude`,
@@ -124,7 +124,7 @@ Notes for the implementer:
     Assert that the error propagates, and not exit 300.
 
   Verify with `uv run pytest tests/test_workflows.py -k read_phonopy`.
-- [ ] 3.3 In `ForceConstantsWorkChain`:
+- [x] 3.3 In `ForceConstantsWorkChain`:
   - add the `phonopy` namespace and three ports, with the help texts in
     design.md Decision 1;
   - replace `_validate_source`;
@@ -138,7 +138,7 @@ Notes for the implementer:
     built by any means; passed through unchanged."
 
   Verify with `uv run ruff check`.
-- [ ] 3.4 Add workchain tests in `tests/test_workflows.py`. Add
+- [x] 3.4 Add workchain tests in `tests/test_workflows.py`. Add
   `ForceConstantsWorkChain` to the existing `from aiida_pythonjob_ins.workflows
   import (...)` block; it is already re-exported there. These tests need no
   `python_code` fixture:
@@ -170,7 +170,7 @@ Notes for the implementer:
 
 ## 4. Consumer workflows and documentation
 
-- [ ] 4.1 Add consumer tests in `tests/test_workflows.py`:
+- [x] 4.1 Add consumer tests in `tests/test_workflows.py`:
   - `test_dispersion_from_phonopy_files(python_code, phonopy_hdf5_dir)`: launch
     `DispersionWorkChain` with `force_constants={"phonopy": <HDF5 + Born +
     summary nodes>}` and `q_spacing=Float(0.3)`. Finishes ok, and
@@ -186,11 +186,11 @@ Notes for the implementer:
     `born`.
 
   Verify with `uv run pytest tests/test_workflows.py -k "phonopy"`.
-- [ ] 4.2 Rework `docs/source/tutorials/plot_phonopy_bands_and_dos.py` exactly
+- [x] 4.2 Rework `docs/source/tutorials/plot_phonopy_bands_and_dos.py` exactly
   as described in design.md Decision 7, keeping the `WorkflowFactory` loading
   and the comment that direct imports also work. Verify with
   `uv run ruff check docs/source/tutorials` and with the docs build in 4.4.
-- [ ] 4.3 Update the prose that lists the sources:
+- [x] 4.3 Update the prose that lists the sources:
   - **`README.md`, "What's implemented":** in the "Input formats" bullet, say
     that Phonopy is `phonopy.yaml` + `FORCE_CONSTANTS` or
     `force_constants.hdf5` [+ `BORN`]. In the "Workflows" bullet, list three
@@ -217,7 +217,7 @@ Notes for the implementer:
   (single quotes, so the shell does not interpret the backticks) returns
   nothing, and that README no longer says "*either* a CASTEP `castep_file`
   *or* a prepared".
-- [ ] 4.4 Build the docs with `uv run --group doc make -C docs html` (Graphviz
+- [x] 4.4 Build the docs with `uv run --group doc make -C docs html` (Graphviz
   and `ps` are available in the sandbox). Verify that the build finishes
   without warnings, the Phonopy example executes, and
   `docs/build/html/auto_examples/plot_phonopy_bands_and_dos.html` shows a band
@@ -228,7 +228,7 @@ Notes for the implementer:
 
 - [ ] 5.1 Run `uv run pytest`, `uv run ruff check` and
   `uv run ruff format --check`. Verify that all three pass.
-- [ ] 5.2 Run `openspec validate add-phonopy-force-constants-source` (from
+- [x] 5.2 Run `openspec validate add-phonopy-force-constants-source` (from
   `/workspace` or `/workspace/aiida_pythonjob_ins`). Run `git status` in
   `aiida_pythonjob_ins` and confirm that it lists only:
   - the files named in this task list;

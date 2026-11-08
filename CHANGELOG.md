@@ -15,6 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   prepared `node` (`ForceConstantsData`) -- into a `force_constants` output,
   dispatches no jobs and takes no `Code`. An unreadable file ends it with
   `410 ERROR_READ_FAILED`.
+- `ForceConstantsWorkChain`, and so every force-constants workflow, accepts a
+  `phonopy` input namespace: `summary` (`phonopy.yaml`, required within the
+  namespace), optional `force_constants` (HDF5 or Phonopy text `FORCE_CONSTANTS`)
+  and optional `born`. The files are read in-process by a calcfunction, and a
+  failed read exits `410 ERROR_READ_FAILED`.
+- Bundled sample data `tests/data/phonopy/NaCl_hdf5/`: NaCl Phonopy output in
+  HDF5 form, from Euphonic's test suite.
 
 ### Changed
 
@@ -41,11 +48,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   They combine two independent abstract bases, `FromForceConstantsWorkChain`
   (the force-constants source) and `JobDispatchWorkChain` (`code`/`options`
   handling). `ToscaFromModesWorkChain` subclasses only `JobDispatchWorkChain`.
+
 - CASTEP files are read in-process by a calcfunction, recorded as its own
   `CalcFunctionNode` in the provenance graph, instead of by a dispatched
   `PythonJob`. This removes about 2.8 s of job overhead from a read that takes
   about 0.1 s. `prepare_read_force_constants_inputs` remains available as an
   example of `PythonJob` file staging.
+
+- `prepare_read_phonopy_inputs` is documented as a demonstration of `PythonJob`
+  file staging. Workflows read Phonopy files in-process through the `phonopy`
+  source, so no workflow uses this builder, and it is likely to be removed before
+  version 1.0. Its behaviour is unchanged.
+
 - Workflow pages now render each WorkChain's docstring as formatted
   reStructuredText, so exit-code lists, inline literals and cross-references
   between workflows appear as rendered documentation rather than raw source.
