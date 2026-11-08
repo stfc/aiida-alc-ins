@@ -13,8 +13,6 @@ sample data", and
 - **Origin**: [`isisneutronmuon/abINS_lib`](https://github.com/isisneutronmuon/abINS_lib),
   `tests/data/ethanol_qpoint_phonon_modes.json`
 - **Upstream commit**: `c308b4ba045074ff3e94a4cd214eec31c3021534`
-- **Licence**: GPL-3.0-or-later (same licence as this project; see `abINS_lib`'s
-  `LICENSE`)
 - **SHA-256**: `c0c3f306e44acec8db746e8e64c1af9936015759f0f76fe10e2d94101ad7a7f9`
 
 ## `phonopy/NaCl_hdf5/`

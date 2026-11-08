@@ -82,7 +82,8 @@ os.environ["AIIDA_PATH"] = _AIIDA_CONFIG_TMPDIR.name
 import json  # noqa: E402
 
 from aiida.manage.configuration import get_config  # noqa: E402
-from aiida.orm import Computer, InstalledCode  # noqa: E402
+from aiida.orm import Computer, InstalledCode, SinglefileData  # noqa: E402
+from euphonic import ForceConstants  # noqa: E402
 from filelock import FileLock  # noqa: E402
 from tests.container_support import (  # noqa: E402
     SSHContainer,
@@ -175,6 +176,27 @@ def phonopy_dir() -> Path:
 def phonopy_hdf5_dir() -> Path:
     """Directory of the bundled NaCl HDF5 Phonopy example (from the Euphonic suite)."""
     return DATA_DIR / "phonopy" / "NaCl_hdf5"
+
+
+@pytest.fixture
+def phonopy_hdf5_nodes(aiida_profile, phonopy_hdf5_dir) -> dict[str, SinglefileData]:
+    """The HDF5 NaCl set as a ``phonopy`` source: summary, HDF5 and Born files."""
+    return {
+        "summary": SinglefileData(phonopy_hdf5_dir / "phonopy_nofc_noborn.yaml"),
+        "force_constants": SinglefileData(phonopy_hdf5_dir / "force_constants.hdf5"),
+        "born": SinglefileData(phonopy_hdf5_dir / "BORN_nacl"),
+    }
+
+
+@pytest.fixture
+def phonopy_hdf5_reference(phonopy_hdf5_dir) -> ForceConstants:
+    """Direct Euphonic read of the same files as ``phonopy_hdf5_nodes``."""
+    return ForceConstants.from_phonopy(
+        path=phonopy_hdf5_dir,
+        summary_name="phonopy_nofc_noborn.yaml",
+        fc_name="force_constants.hdf5",
+        born_name="BORN_nacl",
+    )
 
 
 @pytest.fixture
