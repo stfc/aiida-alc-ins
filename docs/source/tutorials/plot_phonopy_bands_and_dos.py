@@ -4,8 +4,9 @@
 Run :class:`~aiida_pythonjob_ins.workflows.DispersionWorkChain` and
 :class:`~aiida_pythonjob_ins.workflows.DosWorkChain` on NaCl **Phonopy** output
 (``phonopy_nofc_noborn.yaml`` + ``force_constants.hdf5`` + ``BORN_nacl``). The
-files are passed straight to the workflows as their ``phonopy`` force-constants
-source; nothing reads them in a separate step first.
+files are passed straight to each workflow as its ``phonopy`` force-constants
+source; nothing reads them in a separate step first. The last section shows how
+AiiDA caching lets the second workflow reuse the first one's read.
 """
 
 # %%
@@ -19,11 +20,10 @@ from aiida.engine import run_get_node
 code = get_python_code()
 
 # %%
-# Band structure
-# --------------
-# The three Phonopy files are the ``phonopy`` source of the dispersion workflow.
-# The workflow reads them in a ``read_phonopy_force_constants`` calculation, inside
-# its ``ForceConstantsWorkChain`` sub-workflow.
+# Load the workflows
+# ------------------
+# The three Phonopy files are the ``phonopy`` source of each workflow. Each reads
+# them inside its ``ForceConstantsWorkChain`` sub-workflow.
 
 from aiida.plugins import WorkflowFactory
 
@@ -42,6 +42,22 @@ phonopy_files = {
     "born": orm.SinglefileData(example_data("phonopy", "NaCl_hdf5", "BORN_nacl")),
 }
 
+# %%
+# Enable caching
+# --------------
+# Caching is switched on for the Phonopy read so that the second workflow below
+# can reuse the first one's result. It is an optional detail, explained at the end.
+
+from aiida.manage.configuration import get_config
+
+READ_PHONOPY_PROCESS_TYPE = (
+    "aiida_pythonjob_ins.workflows.force_constants.read_phonopy_force_constants"
+)
+get_config().set_option("caching.enabled_for", [READ_PHONOPY_PROCESS_TYPE])
+
+# %%
+# Band structure
+# --------------
 bands_results, bands_node = run_get_node(
     DispersionWorkChain,
     force_constants={"phonopy": phonopy_files},
@@ -53,19 +69,11 @@ bands_results["band_structure"].show_mpl()
 # %%
 # Density of states
 # -----------------
-# ``DispersionWorkChain`` does not output its force constants. The DOS takes them
-# from the ``ForceConstantsWorkChain`` child of the band-structure run instead. The
-# files are then not read a second time, and the DOS shares the same provenance.
+# The DOS workflow is given the same files.
 
-fc_child = next(
-    child
-    for child in bands_node.called
-    if child.process_label == "ForceConstantsWorkChain"
-)
-
-dos_results, _ = run_get_node(
+dos_results, dos_node = run_get_node(
     DosWorkChain,
-    force_constants={"node": fc_child.outputs.force_constants},
+    force_constants={"phonopy": phonopy_files},
     q_spacing=orm.Float(0.2),
     energy_spacing=orm.Float(1.0),
     code=code,
@@ -92,3 +100,51 @@ fig.tight_layout()
 # which links the three Phonopy files -- the full history in one picture.
 
 show_provenance(bands_node, title="Phonopy -> dispersion provenance")
+
+# %%
+# Avoiding the repeated read
+# --------------------------
+# Both workflows were given the same Phonopy files, and each records its own
+# ``read_phonopy_force_constants`` calculation. Because caching was enabled at the
+# start, the DOS run did not read the files again: AiiDA recognised the same file
+# contents and reused the result of the first read.
+#
+# So to run several workflows on one Phonopy file set, pass the same files each
+# time. Caching is off by default in AiiDA; the `AiiDA caching documentation
+# <https://aiida.readthedocs.io/projects/aiida-core/en/stable/topics/provenance/caching.html>`_
+# explains how to enable it permanently for a profile.
+
+# %%
+# The DOS run's read is marked as created from the cache. Asserting this means a
+# silent loss of cacheability fails the documentation build instead of passing
+# unnoticed.
+
+dos_reads = [
+    process
+    for process in dos_node.called_descendants
+    if process.process_label == "read_phonopy_force_constants"
+]
+reused = all(read.base.caching.is_created_from_cache for read in dos_reads)
+print(f"Phonopy read taken from the cache: {reused}")
+assert dos_reads
+assert reused, "expected the DOS run to reuse the cached Phonopy read"
+
+# %%
+# Alternative: reuse the force-constants node directly
+# ----------------------------------------------------
+# The force constants can also be taken from the first run and passed to another
+# workflow as its ``node`` source, which needs no caching. ``DispersionWorkChain``
+# does not output them, so they are found as the output of its
+# ``ForceConstantsWorkChain`` child. This suits a node you want to hold on to
+# explicitly, such as one built by other means.
+
+fc_child = next(
+    child
+    for child in bands_node.called
+    if child.process_label == "ForceConstantsWorkChain"
+)
+force_constants_node = fc_child.outputs.force_constants
+
+# The node would be passed as
+# ``DosWorkChain, force_constants={"node": force_constants_node}``.
+print(f"Force constants node: {force_constants_node.uuid}")
