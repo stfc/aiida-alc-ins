@@ -70,20 +70,40 @@ rules:
       `ForceConstantsData`, `QpointPhononModes`, `BandsData`), since those names
       are part of the contract. Do not name internal helpers, private functions
       or module paths, which are implementation detail.
+    - Specs may define test-suite capabilities (dependencies, offline
+      execution, performance), but SHALL NOT specify 'watchdog' tests whose sole
+      purpose is to fail if test data is missing or incomplete.
+    - Enforce test completeness and configuration coverage through code review,
+      not through runtime watchdog tests in CI.
   design:
     - Record why a decision was taken and what was rejected, citing the upstream
       AiiDA, aiida-pythonjob or Euphonic documentation that justifies it.
   tasks:
     - Mark work already completed by earlier development as done rather than
       restating it as future work.
+    - Do not create permanent 'meta-tests' (tests that audit test data files,
+      test runners, or test helpers).
+    - When modifying test infrastructure or loaders, the verification is that
+      the actual test suite runs and passes; do not add tests that test the test
+      harness.
 
 operations:
   apply:
     guidance:
       - Run `uv run pytest` and `uv run ruff check` before marking implementation
         tasks complete.
+      - Distinguish durable regression tests from temporary verification
+        scaffolding; keep test verification focused on the system under test.
+      - If you need one-off checks to audit data files or verify a test-loader
+        refactor, use disposable scratchpad scripts and delete them before
+        completing the task; do not enshrine them into the permanent test suite.
   archive:
     guidance:
-      - Keep the specs the single source of truth for behaviour. Where an
-        existing document duplicates a captured capability, cut it back to a
-        pointer rather than maintaining two descriptions that can drift.
+      - Keep the specs the single source of truth for behaviour. Where a
+        contributor-facing document (for example design notes) duplicates a
+        captured capability, cut it back to a pointer rather than maintaining two
+        descriptions that can drift. User-facing docs (README, workflow pages,
+        tutorials) keep their own descriptions and only rarely link to specs.
+      - Verify that no ephemeral verification scripts, scratchpad files, or
+        test-of-tests scaffolding leaked into the permanent test suite before
+        archiving.

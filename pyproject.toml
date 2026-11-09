@@ -114,6 +114,9 @@ filterwarnings = [
     "ignore:There is no current event loop:DeprecationWarning:plumpy",
     "ignore:Object of type .* not in session:sqlalchemy.exc.SAWarning",
     "ignore:Set OLD_ERROR_HANDLING to false:DeprecationWarning:spglib",
+    # seekpath warns that the 8-atom NaCl test cell is a supercell of its primitive
+    # cell. The k-path it returns is still valid, so the warning is not actionable.
+    "ignore:The provided cell is a supercell:UserWarning:seekpath",
 ]
 
 [tool.ruff]
