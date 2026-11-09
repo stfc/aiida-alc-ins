@@ -21,6 +21,7 @@ from aiida.engine import run_get_node
 from aiida.orm import XyData
 from aiida_pythonjob import PythonJob
 from euphonic import ForceConstants, QpointPhononModes, Quantity, Spectrum1D, ureg
+from tests.assertions import assert_equivalent_force_constants
 
 from aiida_pythonjob_ins.data import ForceConstantsData, QpointPhononModesData
 from aiida_pythonjob_ins.operations import (
@@ -32,6 +33,7 @@ from aiida_pythonjob_ins.operations import (
     calculate_tosca_spectrum,
     default_energy_bins,
     read_force_constants_from_castep,
+    read_force_constants_from_phonopy,
     tosca_energy_bins,
 )
 from aiida_pythonjob_ins.pythonjobs import (
@@ -265,6 +267,21 @@ def test_read_phonopy_pythonjob(python_code, phonopy_files):
     fc_node = results["result"]
     assert isinstance(fc_node, ForceConstantsData)
     assert fc_node.get_force_constants().crystal.n_atoms == 8
+
+
+def test_read_force_constants_from_phonopy_hdf5(phonopy_hdf5_dir, monkeypatch):
+    """The Phonopy reader accepts HDF5 force constants and matches Euphonic."""
+    # The operation resolves file names in the working directory.
+    monkeypatch.chdir(phonopy_hdf5_dir)
+    names = {
+        "summary_name": "phonopy_nofc_noborn.yaml",
+        "fc_name": "force_constants.hdf5",
+        "born_name": "BORN_nacl",
+    }
+    result = read_force_constants_from_phonopy(**names)
+    expected = ForceConstants.from_phonopy(path=phonopy_hdf5_dir, **names)
+
+    assert_equivalent_force_constants(result, expected)
 
 
 # --- TOSCA scattering-intensity operations -------------------------------------

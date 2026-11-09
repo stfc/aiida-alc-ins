@@ -1,0 +1,54 @@
+## MODIFIED Requirements
+
+### Requirement: Worked examples are executed when the documentation is built
+
+The documentation SHALL include runnable examples that execute real workflows
+during the build, so a broken example fails the build rather than silently
+misleading readers. Each example SHALL present both its scientific result and the
+provenance graph that produced it, and SHALL be downloadable as a notebook. Worked
+examples and project README examples SHALL demonstrate loading custom data nodes
+and workflows through AiiDA's standard plugin factories (`DataFactory` and `WorkflowFactory`)
+as the primary pattern, noting that direct class imports are also supported.
+
+Where an example's sample material is a poor illustration of the calculation being
+demonstrated — scientifically valid but unrepresentative of how the method is
+used — the example SHALL say so on the page, rather than leaving the reader to
+infer that it is typical.
+
+#### Scenario: Examples cover the supported inputs and both workflows
+
+- **WHEN** the example gallery is built
+- **THEN** it includes a band structure from CASTEP input, a density of states from
+  CASTEP input, and both quantities from Phonopy input
+- **AND** the Phonopy example supplies the Phonopy files to the workflows as their
+  force-constants source, rather than reading them in a separate step first
+
+#### Scenario: Examples cover the spectrometer workflows
+
+- **WHEN** the example gallery is built
+- **THEN** it also includes a spectrometer spectrum computed from prepared phonon
+  modes, and one computed from force constants
+
+#### Scenario: Each example shows its provenance
+
+- **WHEN** an example runs during the build
+- **THEN** it renders the scientific result as a figure and the resulting AiiDA
+  provenance graph as a second figure
+
+#### Scenario: Examples use bundled sample data
+
+- **WHEN** an example needs input data
+- **THEN** it locates the sample files bundled in the repository at runtime, rather
+  than downloading them or requiring the reader to supply them
+
+#### Scenario: Examples use plugin factories for loading classes
+
+- **WHEN** an example or README snippet loads a registered data type or workflow
+- **THEN** it demonstrates loading via `DataFactory` or `WorkflowFactory`, with a brief note that direct class imports are also supported
+
+#### Scenario: An unrepresentative sample is declared as such
+
+- **WHEN** an example demonstrates a calculation on a material that is not
+  representative of that calculation's usual application
+- **THEN** the page states that the result is a demonstration of the method rather
+  than a typical measurement

@@ -2,12 +2,15 @@ Workflows
 =========
 
 The high-level ``WorkChain``\ s and their inputs/outputs. ``ForceConstantsWorkChain``
-resolves a force-constants source (a CASTEP ``castep_file`` or a pre-built
-``node``) into a ``ForceConstantsData``; it is also runnable standalone. The
-workflows that start from force constants -- ``DispersionWorkChain``,
-``DosWorkChain`` and ``ToscaFromForceConstantsWorkChain`` -- run it as a
-sub-workflow, grouping its inputs under a single ``force_constants`` namespace
-(e.g. ``force_constants={"castep_file": f}`` or ``force_constants={"node": fc}``).
+resolves a force-constants source into a ``ForceConstantsData``: a CASTEP
+``castep_file``, a Phonopy file set under ``phonopy``, or a pre-built ``node``.
+It is also runnable standalone. The workflows that start from force constants --
+``DispersionWorkChain``, ``DosWorkChain`` and
+``ToscaFromForceConstantsWorkChain`` -- run it as a sub-workflow, grouping its
+inputs under a single ``force_constants`` namespace (e.g.
+``force_constants={"castep_file": f}``,
+``force_constants={"phonopy": {"summary": s, "force_constants": fc, "born": b}}``
+or ``force_constants={"node": fc}``).
 ``ToscaFromModesWorkChain`` instead starts from precomputed phonon modes and
 offers no force-constants source at all -- see the worked
 :doc:`examples <auto_examples/index>`. To build a workflow of your own on top of
@@ -54,7 +57,7 @@ does not inherit from ``ForceConstantsWorkChain``. Instead, it runs
 ``ForceConstantsWorkChain`` for you. Inheriting it gives your workflow:
 
 * a ``force_constants`` input group, holding the same inputs as
-  ``ForceConstantsWorkChain`` (``castep_file`` or ``node``);
+  ``ForceConstantsWorkChain`` (``castep_file``, ``phonopy`` or ``node``);
 * two outline steps, ``run_force_constants`` and ``inspect_force_constants``,
   which run the child and collect its result. They are two steps because a
   WorkChain submits a child in one step and the engine resumes it in the next,
