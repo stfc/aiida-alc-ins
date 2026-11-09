@@ -23,6 +23,7 @@ from aiida.orm import (
     XyData,
 )
 from euphonic import ForceConstants, QpointPhononModes
+from tests.assertions import assert_equivalent_force_constants
 
 from aiida_pythonjob_ins.data import ForceConstantsData, QpointPhononModesData
 from aiida_pythonjob_ins.workflows import (
@@ -31,7 +32,10 @@ from aiida_pythonjob_ins.workflows import (
     ToscaFromForceConstantsWorkChain,
     ToscaFromModesWorkChain,
 )
-from aiida_pythonjob_ins.workflows.force_constants import read_castep_force_constants
+from aiida_pythonjob_ins.workflows.force_constants import (
+    read_castep_force_constants,
+    read_phonopy_force_constants,
+)
 from aiida_pythonjob_ins.workflows.tosca import group_spectra
 
 # The process_type aiida-pythonjob registers PythonJob under -- see
@@ -63,9 +67,7 @@ def test_read_castep_force_constants_valid(quartz_castep_bin):
 
     # Equivalent to a direct public-API read on the same file.
     expected = ForceConstants.from_castep(quartz_castep_bin)
-    got = result.get_force_constants()
-    np.testing.assert_allclose(got.force_constants, expected.force_constants)
-    np.testing.assert_allclose(got.crystal.cell_vectors, expected.crystal.cell_vectors)
+    assert_equivalent_force_constants(result.get_force_constants(), expected)
 
 
 def test_read_castep_force_constants_junk(tmp_path):
@@ -168,6 +170,121 @@ def test_read_castep_force_constants_unrelated_runtime_error_propagates(tmp_path
         pytest.raises(RuntimeError, match="Something completely different"),
     ):
         run_get_node(read_castep_force_constants, castep_file=castep_file)
+
+
+# --- read_phonopy_force_constants calcfunction ------------------------------
+
+
+def test_read_phonopy_force_constants_hdf5(phonopy_hdf5_nodes, phonopy_hdf5_reference):
+    """HDF5 force constants with a Born file are read equivalently to Euphonic.
+
+    The calcfunction links all three supplied files to its ``CalcFunctionNode``.
+    """
+    result, node = run_get_node(read_phonopy_force_constants, **phonopy_hdf5_nodes)
+
+    assert node.is_finished_ok, node.exit_status
+    assert isinstance(node, CalcFunctionNode)
+    assert isinstance(result, ForceConstantsData)
+    for key in ("summary", "force_constants", "born"):
+        assert key in node.inputs
+    assert_equivalent_force_constants(
+        result.get_force_constants(), phonopy_hdf5_reference
+    )
+
+
+def test_read_phonopy_force_constants_hdf5_without_born(
+    phonopy_hdf5_dir, phonopy_hdf5_nodes
+):
+    """HDF5 force constants without a Born file yield no Born data."""
+    result, node = run_get_node(
+        read_phonopy_force_constants,
+        summary=phonopy_hdf5_nodes["summary"],
+        force_constants=phonopy_hdf5_nodes["force_constants"],
+    )
+
+    assert node.is_finished_ok, node.exit_status
+    expected = ForceConstants.from_phonopy(
+        path=phonopy_hdf5_dir,
+        summary_name="phonopy_nofc_noborn.yaml",
+        fc_name="force_constants.hdf5",
+    )
+    got = result.get_force_constants()
+    assert_equivalent_force_constants(got, expected)
+    assert got.born is None
+
+
+def test_read_phonopy_force_constants_text_format(phonopy_dir):
+    """Phonopy text-format force constants are read equivalently to Euphonic."""
+    result, node = run_get_node(
+        read_phonopy_force_constants,
+        summary=SinglefileData(phonopy_dir / "phonopy.yaml"),
+        force_constants=SinglefileData(phonopy_dir / "FORCE_CONSTANTS"),
+        born=SinglefileData(phonopy_dir / "BORN"),
+    )
+
+    assert node.is_finished_ok, node.exit_status
+    expected = ForceConstants.from_phonopy(
+        path=phonopy_dir,
+        summary_name="phonopy.yaml",
+        fc_name="FORCE_CONSTANTS",
+        born_name="BORN",
+    )
+    assert_equivalent_force_constants(result.get_force_constants(), expected)
+
+
+def test_read_phonopy_force_constants_embedded_summary(phonopy_hdf5_dir):
+    """A summary that embeds force constants needs no ``force_constants`` file."""
+    result, node = run_get_node(
+        read_phonopy_force_constants,
+        summary=SinglefileData(phonopy_hdf5_dir / "phonopy_nacl.yaml"),
+    )
+
+    assert node.is_finished_ok, node.exit_status
+    expected = ForceConstants.from_phonopy(
+        path=phonopy_hdf5_dir, summary_name="phonopy_nacl.yaml"
+    )
+    assert_equivalent_force_constants(result.get_force_constants(), expected)
+
+
+def test_read_phonopy_force_constants_missing_force_constants(phonopy_hdf5_nodes):
+    """A summary without force constants and no ``force_constants`` file exits 300."""
+    result, node = run_get_node(
+        read_phonopy_force_constants, summary=phonopy_hdf5_nodes["summary"]
+    )
+
+    assert node.exit_status == 300
+    assert "Could not read Phonopy force constants" in (node.exit_message or "")
+    assert not result
+    assert not list(node.outputs)
+
+
+def test_read_phonopy_force_constants_corrupt_hdf5(phonopy_hdf5_nodes, tmp_path):
+    """Junk bytes in an HDF5 force-constants file exit 300 with no outputs."""
+    corrupt = tmp_path / "force_constants.hdf5"
+    corrupt.write_bytes(b"\x00\x01 not hdf5 \xff" * 100)
+    result, node = run_get_node(
+        read_phonopy_force_constants,
+        summary=phonopy_hdf5_nodes["summary"],
+        force_constants=SinglefileData(corrupt),
+    )
+
+    assert node.exit_status == 300
+    assert "Could not read Phonopy force constants" in (node.exit_message or "")
+    assert not result
+    assert not list(node.outputs)
+
+
+def test_read_phonopy_force_constants_unrelated_error_propagates(phonopy_hdf5_nodes):
+    """An error outside ``PHONOPY_READ_ERRORS`` is not caught; the process excepts."""
+    with (
+        patch.object(
+            ForceConstantsData,
+            "from_phonopy",
+            side_effect=RuntimeError("Something completely different"),
+        ),
+        pytest.raises(RuntimeError, match="Something completely different"),
+    ):
+        run_get_node(read_phonopy_force_constants, **phonopy_hdf5_nodes)
 
 
 def test_dispersion_workchain(python_code, quartz_castep_bin):
@@ -305,49 +422,50 @@ def test_dos_workchain(python_code, quartz_castep_bin):
         assert opts["max_wallclock_seconds"] == 3600
 
 
-def _force_constants_from_phonopy(phonopy_dir):
-    fc = ForceConstants.from_phonopy(
-        path=str(phonopy_dir),
-        summary_name="phonopy.yaml",
-        fc_name="FORCE_CONSTANTS",
-        born_name="BORN",
-    )
-    return ForceConstantsData(fc)
-
-
-def test_dispersion_from_phonopy(python_code, phonopy_dir):
-    """DispersionWorkChain accepts a ForceConstantsData (here from Phonopy)."""
+def test_dispersion_from_phonopy_files(
+    python_code, phonopy_hdf5_nodes, phonopy_hdf5_reference
+):
+    """DispersionWorkChain reads Phonopy files via its ``force_constants`` namespace."""
     results, node = run_get_node(
         DispersionWorkChain,
-        force_constants={"node": _force_constants_from_phonopy(phonopy_dir)},
+        force_constants={"phonopy": phonopy_hdf5_nodes},
         q_spacing=Float(0.3),
         code=python_code,
     )
+
     assert node.is_finished_ok, node.exit_status
     assert isinstance(results["band_structure"], BandsData)
-    # Exactly one ForceConstantsWorkChain is called, even for a node source.
-    fc_workchains = [
+    fc_children = [
         p
         for p in node.called_descendants
         if isinstance(p, WorkChainNode) and p.process_label == "ForceConstantsWorkChain"
     ]
-    assert len(fc_workchains) == 1
-    # No CASTEP read step, so only the interpolation PythonJob runs.
-    calcjobs = [p for p in node.called_descendants if isinstance(p, CalcJobNode)]
-    assert len(calcjobs) == 1
+    assert len(fc_children) == 1
+    assert_equivalent_force_constants(
+        fc_children[0].outputs.force_constants.get_force_constants(),
+        phonopy_hdf5_reference,
+    )
 
 
-def test_dos_from_phonopy(python_code, phonopy_dir):
-    """DosWorkChain accepts a ForceConstantsData (here from Phonopy)."""
+def test_dos_from_phonopy_files(python_code, phonopy_hdf5_nodes):
+    """DosWorkChain reads Phonopy files via its ``force_constants`` namespace."""
     results, node = run_get_node(
         DosWorkChain,
-        force_constants={"node": _force_constants_from_phonopy(phonopy_dir)},
+        force_constants={"phonopy": phonopy_hdf5_nodes},
         q_spacing=Float(0.5),
         energy_spacing=Float(2.0),
         code=python_code,
     )
+
     assert node.is_finished_ok, node.exit_status
     assert isinstance(results["dos"], XyData)
+
+
+def test_tosca_from_force_constants_exposes_phonopy_namespace():
+    """The Phonopy namespace is exposed under ``force_constants`` with its ports."""
+    fc_namespace = ToscaFromForceConstantsWorkChain.spec().inputs["force_constants"]
+    assert "phonopy" in fc_namespace
+    assert {"summary", "force_constants", "born"} <= set(fc_namespace["phonopy"].keys())
 
 
 def test_workchain_requires_exactly_one_source(python_code, quartz_castep_bin):
