@@ -33,7 +33,7 @@ wheels = [
 
 [[package]]
 name = "aiida-core"
-version = "2.8.1"
+version = "2.9.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
@@ -69,9 +69,9 @@ dependencies = [
     { name = "upf-to-json" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/3b/95224dabbd1eb5410fd4778e61839c9294fec8bcf68834545feb13e7d3ea/aiida_core-2.8.1.tar.gz", hash = "sha256:e39b39b52ccba0c7cc4de0d26da91e707219d28fdaf9a1db7414e1675bcd8438", size = 1664841, upload-time = "2026-07-25T13:21:12.736Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/de/d98bd40a434c71513f9a56181db6e3ca9fe77f27fb9c07c5ff2972c81a20/aiida_core-2.9.4.tar.gz", hash = "sha256:32dfab7ce678c2d42ce4c1327422a54ae05a4f76993cbec50c05f6ea250a4a80", size = 1093363, upload-time = "2026-10-22T16:14:18.128Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/45/b1/48d7384440a7b8604b116b6d4e988acc6cd79cbd97b16d377127ac76872e/aiida_core-2.8.1-py3-none-any.whl", hash = "sha256:d1aa1e2c71a464d915a6ff7066aafc6d2eac783388c91dcad6f6d9f272861a74", size = 1430247, upload-time = "2026-07-25T13:21:10.766Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/aa/5cf66b639676dabf43cc80a9efba2db9fa063dbd26d123fcdb87af629d73/aiida_core-2.9.4-py3-none-any.whl", hash = "sha256:b6c92ff3c183d50b361c47963770aa99dcaceb906c7dbd972a4adf23ebc10beb", size = 1502015, upload-time = "2026-10-22T16:14:16.008Z" },
 ]
 
 [[package]]
@@ -280,15 +280,15 @@ wheels = [
 
 [[package]]
 name = "asyncssh"
-version = "2.21.1"
+version = "2.24.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/b8/065c20bb5c9b8991648c0f25b13e445b4f51556cc3fdd0ad13ce4787c156/asyncssh-2.21.1.tar.gz", hash = "sha256:9943802955e2131536c2b1e71aacc68f56973a399937ed0b725086d7461c990c", size = 540515, upload-time = "2025-09-28T16:36:19.468Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/dd/7f/2d79247bacc562104f312d27efe541673aa177feac89de291bd61bca52be/asyncssh-2.24.0.tar.gz", hash = "sha256:4064c590e59ce2e8d82a2f66d35f3120d765828b4df5e3dbfb07b4a8c24686c9", size = 550148, upload-time = "2026-06-27T20:34:44.755Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0e/89/4a9a61bc120ca68bce92b0ea176ddc0e550e58c60ab820603bd5246e7261/asyncssh-2.21.1-py3-none-any.whl", hash = "sha256:f218f9f303c78df6627d0646835e04039a156d15e174ad63c058d62de61e1968", size = 375529, upload-time = "2025-09-28T16:36:17.68Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/29/908ce0ca5e8cae76662e354a0f08df552d6d221844748b9e5ca06051cc44/asyncssh-2.24.0-py3-none-any.whl", hash = "sha256:9abd46300adcb6d4b73269b34c53cd0d17a138b9a22b5b38008ce7d5808734b7", size = 381237, upload-time = "2026-06-27T20:34:43.198Z" },
 ]
 
 [[package]]
