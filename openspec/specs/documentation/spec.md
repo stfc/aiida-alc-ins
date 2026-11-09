@@ -58,6 +58,8 @@ infer that it is typical.
 - **WHEN** the example gallery is built
 - **THEN** it includes a band structure from CASTEP input, a density of states from
   CASTEP input, and both quantities from Phonopy input
+- **AND** the Phonopy example supplies the Phonopy files to the workflows as their
+  force-constants source, rather than reading them in a separate step first
 
 #### Scenario: Examples cover the spectrometer workflows
 
