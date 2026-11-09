@@ -1,18 +1,7 @@
-"""Standalone WorkChain that resolves force constants from a source.
+"""Resolve force constants from a CASTEP file, Phonopy files or a prepared node.
 
-``ForceConstantsWorkChain`` is a launchable source-resolution unit: exactly one
-of a CASTEP ``castep_file`` (``SinglefileData``), a Phonopy file set under a
-``phonopy`` namespace, or a prepared ``node`` (``ForceConstantsData``) goes in,
-and a ``force_constants`` output comes out. It dispatches no jobs and takes no
-``Code`` or execution options -- remote or job-based sources are produced
-upstream by the caller and passed as ``node``.
-
-Consuming workflows (dispersion, DOS, TOSCA-from-force-constants) run it as a
-sub-workflow, exposing its inputs under a ``force_constants`` namespace (see
-:mod:`aiida_pythonjob_ins.workflows.base`). Keeping source resolution here means
-the steps that turn an input into a ``ForceConstantsData`` can grow (new
-formats, multi-step imports) without touching every consumer's outline, and
-the unit can also be launched alone.
+See :class:`ForceConstantsWorkChain`. Consuming workflows expose its inputs under
+``force_constants`` (see :mod:`aiida_pythonjob_ins.workflows.base`).
 
 WorkChain reference:
 https://aiida.readthedocs.io/projects/aiida-core/en/stable/topics/workflows/write.html
@@ -29,9 +18,8 @@ from aiida.orm import SinglefileData
 
 from aiida_pythonjob_ins.data import ForceConstantsData
 
-#: Exceptions Euphonic's Phonopy reader raises for unreadable or invalid input,
-#: as observed against malformed summaries, HDF5 and text files (see the
-#: add-phonopy-force-constants-source design, Decision 4).
+#: Exceptions Euphonic's Phonopy reader raises for unreadable or invalid input
+#: (malformed summary, HDF5 or text file). Anything else is a bug and propagates.
 PHONOPY_READ_ERRORS = (OSError, ValueError, KeyError, TypeError, yaml.YAMLError)
 
 
@@ -39,19 +27,10 @@ PHONOPY_READ_ERRORS = (OSError, ValueError, KeyError, TypeError, yaml.YAMLError)
 def read_castep_force_constants(
     castep_file: SinglefileData,
 ) -> ForceConstantsData | ExitCode:
-    """Read a CASTEP ``SinglefileData`` into a :class:`ForceConstantsData` in-process.
+    """Read a CASTEP ``SinglefileData`` into a :class:`ForceConstantsData`.
 
-    A calcfunction (not a dispatched PythonJob): the read takes about 0.1 s, so the
-    ~2.8 s of job machinery it used to incur is unjustified. It records a
-    ``CalcFunctionNode`` linking the file to the ``ForceConstantsData`` it
-    produces, and it can be cached.
-
-    An unreadable or invalid file returns an ``ExitCode(300, ...)`` rather than
-    raising. All foreseeable Euphonic reader failures on truncated, corrupt, or
-    non-phonon CASTEP inputs are caught per AiiDA's guidance to return an
-    ``ExitCode`` for classifiable failures. ``RuntimeError`` is matched by
-    message so that genuine internal bugs continue to propagate as Excepted
-    processes.
+    An unreadable or invalid file returns ``ExitCode(300)``. Other exceptions
+    propagate.
     """
     try:
         with castep_file.as_path() as path:
@@ -59,6 +38,8 @@ def read_castep_force_constants(
     except (EOFError, struct.error, OSError, ValueError) as exc:
         return ExitCode(300, f"Could not read CASTEP force constants: {exc}")
     except RuntimeError as exc:
+        # Euphonic signals bad CASTEP input with a bare RuntimeError, so match by
+        # message; any other RuntimeError is a bug and must propagate.
         msg = str(exc)
         if "Force constants matrix could not be found" in msg or "Invalid file" in msg:
             return ExitCode(300, f"Could not read CASTEP force constants: {exc}")
@@ -73,21 +54,9 @@ def read_phonopy_force_constants(
 ) -> ForceConstantsData | ExitCode:
     """Read Phonopy ``SinglefileData`` files into a :class:`ForceConstantsData`.
 
-    An in-process calcfunction, not a dispatched PythonJob, for the same reason as
-    :func:`read_castep_force_constants`: the read is cheap. It records a
-    ``CalcFunctionNode`` linking every supplied file (``summary``,
-    ``force_constants``, ``born``) to the ``ForceConstantsData`` it produces, and
-    it can be cached.
-
-    Each file is read from its own temporary copy, under the file name it was
-    stored with. Euphonic therefore sees the Phonopy file names, and the HDF5 or
-    text format of ``force_constants`` is taken from that file name's suffix
-    (``.hdf5``, ``.hd5`` and ``.h5`` select HDF5). ``force_constants`` may be
-    omitted when the summary embeds force constants; ``born`` is optional.
-
-    A foreseeable failure, such as a missing or malformed file, returns
-    ``ExitCode(300, ...)`` rather than raising. Any other exception propagates, so
-    that an internal bug surfaces as an Excepted process.
+    Each file is read from a temporary copy under its stored name, so Euphonic
+    infers the force-constants format from the suffix. A missing or malformed
+    file returns ``ExitCode(300)``. Other exceptions propagate.
     """
     try:
         with contextlib.ExitStack() as stack:
@@ -103,27 +72,15 @@ def read_phonopy_force_constants(
 
 
 class ForceConstantsWorkChain(WorkChain):
-    """Resolve a ``ForceConstantsData`` from a CASTEP file, Phonopy files or a node.
+    """Resolve a ``ForceConstantsData`` from ``castep_file``, ``phonopy`` or ``node``.
 
-    Exactly one of three sources is accepted:
-
-    * a ``castep_file``, read in-process by the :func:`read_castep_force_constants`
-      calcfunction;
-    * a ``phonopy`` namespace (``summary``, optional ``force_constants`` and
-      ``born``), read in-process by the :func:`read_phonopy_force_constants`
-      calcfunction;
-    * a ``node``, passed through directly with no calculation.
-
-    Each file read records a ``CalcFunctionNode`` linking the supplied files to the
-    output. The resolved force constants are exposed as the ``force_constants``
-    output.
-
-    It takes no ``Code`` or execution options: a ``node`` from a job-based source
-    is produced upstream by the caller.
+    Exactly one source is accepted. Files are read in-process by a calcfunction,
+    which links them to the output in provenance; a ``node`` passes through
+    unchanged. No ``Code`` is needed: job-based sources are produced upstream and
+    passed as ``node``.
 
     Exit Codes:
-        * 410 (ERROR_READ_FAILED): The force constants could not be read from a
-          CASTEP or Phonopy file.
+        * 410 (ERROR_READ_FAILED): A CASTEP or Phonopy file could not be read.
     """
 
     @classmethod
@@ -225,11 +182,7 @@ class ForceConstantsWorkChain(WorkChain):
         return bool(self.inputs.get("phonopy"))
 
     def read_castep_file(self) -> ExitCode | None:
-        """Read the supplied CASTEP file in-process and store the result.
-
-        A failed read terminates the workflow with ``ERROR_READ_FAILED`` (410)
-        before the ``finalize`` step, so no output is emitted.
-        """
+        """Read the CASTEP file; fail with ``ERROR_READ_FAILED``."""
         result, node = read_castep_force_constants.run_get_node(self.inputs.castep_file)
         if not node.is_finished_ok:
             self.report(node.exit_message)
@@ -238,11 +191,7 @@ class ForceConstantsWorkChain(WorkChain):
         return None
 
     def read_phonopy(self) -> ExitCode | None:
-        """Read the supplied Phonopy files in-process and store the result.
-
-        A failed read terminates the workflow with ``ERROR_READ_FAILED`` (410)
-        before the ``finalize`` step, so no output is emitted.
-        """
+        """Read the Phonopy files; fail with ``ERROR_READ_FAILED``."""
         result, node = read_phonopy_force_constants.run_get_node(**self.inputs.phonopy)
         if not node.is_finished_ok:
             self.report(node.exit_message)

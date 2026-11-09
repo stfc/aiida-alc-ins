@@ -99,21 +99,13 @@ def read_force_constants_from_phonopy(
     fc_name: str = "FORCE_CONSTANTS",
     born_name: str | None = None,
 ) -> ForceConstants:
-    """Read force constants from Phonopy output into ``ForceConstants``.
+    """Read Phonopy output files into ``ForceConstants``.
 
-    Thin wrapper over ``ForceConstants.from_phonopy`` (requires euphonic's
-    ``phonopy-reader`` extra, which this package installs by default). All names
-    are resolved in the working directory; when run as a PythonJob the files are
-    staged there via ``upload_files`` (see
-    :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_phonopy_inputs`).
-
-    ``fc_name`` may be HDF5 (file name ending ``.hdf5``, ``.hd5`` or ``.h5``) or
-    Phonopy text format. This function exists to be run by
-    :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_phonopy_inputs`, and is
-    likely to be removed with it before version 1.0.
-
-    ``born_name`` is optional (Born charges for LO-TO splitting); pass ``None`` to
-    skip it.
+    Thin wrapper over ``ForceConstants.from_phonopy``. Relative file names are
+    joined to the current working directory (absolute names are used as given).
+    As a PythonJob, :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_phonopy_inputs`
+    stages the files there under the names it passes. Both are likely to be removed
+    before version 1.0. Pass ``born_name=None`` to skip Born charges.
     """
     LOGGER.info(
         "Reading force constants from Phonopy: summary=%s fc=%s born=%s",

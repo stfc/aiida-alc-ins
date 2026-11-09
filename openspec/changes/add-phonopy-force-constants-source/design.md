@@ -224,9 +224,8 @@ Rationale and rejected alternatives:
 Define at module level in `workflows/force_constants.py`:
 
 ```python
-#: Exceptions Euphonic's Phonopy reader raises for unreadable or invalid input,
-#: as observed against malformed summaries, HDF5 and text files (see the
-#: add-phonopy-force-constants-source design, Decision 4).
+#: Exceptions Euphonic's Phonopy reader raises for unreadable or invalid input
+#: (malformed summary, HDF5 or text file). Anything else is a bug and propagates.
 PHONOPY_READ_ERRORS = (OSError, ValueError, KeyError, TypeError, yaml.YAMLError)
 ```
 
@@ -394,16 +393,15 @@ builder already is. Add this note to its docstring, after the summary line:
 
 ```rst
 .. note::
-   This builder demonstrates ``PythonJob`` file staging; none of this
-   package's workflows use it. Workflows read Phonopy files in-process
-   through the ``force_constants.phonopy`` input instead: the read takes a
-   fraction of a second, so dispatching it as a job adds overhead without
-   benefit. This builder is likely to be removed before version 1.0.
+   Demonstrates ``PythonJob`` file staging; no workflow uses it. Workflows
+   read Phonopy files in-process through ``force_constants.phonopy``. Likely
+   to be removed before version 1.0.
 ```
 
 The docstring of `operations.read_force_constants_from_phonopy` gains one
 sentence: it exists to be run by `prepare_read_phonopy_inputs`, and the same
-likely removal applies.
+likely removal applies. Neither docstring restates the HDF5-or-text rule
+(Decision 9).
 
 - **Rejected for now: removing the builder in this change.** Removal would mean
   changing the `pythonjob-execution` requirement that every read operation has
@@ -416,6 +414,34 @@ likely removal applies.
 
 The `pythonjob-execution` and `phonon-operations` specs are unchanged by this
 decision, and the existing tests of the builder stay as they are.
+
+### 9. Docstrings: one home per fact, links elsewhere
+
+The first implementation repeated several facts across the module, class,
+calcfunction, step, operation and builder docstrings (the HDF5 suffix list in
+three places, the in-process rationale in four). Each fact gets one home; the
+other docstrings say less or link to it.
+
+| Fact | Home | Elsewhere |
+|---|---|---|
+| Accepted `force_constants` formats and the suffix rule | `phonopy.force_constants` port help | Not restated; the calcfunction says only that the format is inferred from the stored file name |
+| Why file reads are in-process, and provenance of the read | `ForceConstantsWorkChain` class docstring, one or two sentences | Calcfunctions and builder note do not repeat it |
+| Exit codes 300 and 410 | Calcfunction return contract (300); class `Exit Codes:` (410) | Step methods get a one-line summary |
+| Deprecation of the PythonJob builders | `.. note::` on `prepare_read_phonopy_inputs` | One clause on the operation |
+| What the workchain does | Class docstring | Module docstring is a short pointer to the class and to `workflows.base` |
+
+Further rules:
+
+- Docstrings and code comments do not cite design decisions of an OpenSpec
+  change, because the change is archived after merge. State the fact instead.
+- A comment explaining a non-obvious `except` clause sits next to the clause,
+  not in the calcfunction docstring (this applies to the CASTEP `RuntimeError`
+  matching as well).
+- `operations.py` stays free of AiiDA, including in prose.
+
+This changes docstrings and comments only. No behaviour, port, help text or
+spec requirement changes, so the `specs/` deltas are unaffected. The port help
+strings of Decision 1 stay as written.
 
 ## Risks / Trade-offs
 

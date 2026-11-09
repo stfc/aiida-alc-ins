@@ -238,6 +238,42 @@ Notes for the implementer:
   There should be no scratch scripts and no test-of-test files. Verify that
   validation passes and no unexpected files appear.
 
+## 6. Condense docstrings (design.md, Decision 9)
+
+Docstring and comment edits only; leave the earlier items checked. Where a
+docstring text in 2.3 or 3.1 conflicts with this section, this section wins.
+
+- [x] 6.1 In `src/aiida_pythonjob_ins/workflows/force_constants.py`:
+  - shorten the module docstring to a pointer to `ForceConstantsWorkChain` and
+    `aiida_pythonjob_ins.workflows.base`;
+  - shorten the `ForceConstantsWorkChain` docstring to: the exactly-one rule over
+    the three sources, one or two sentences on in-process reads and provenance,
+    the no-`Code` remark, and the `Exit Codes:` section (410). Do not re-list
+    the ports; their help texts do that;
+  - shorten both calcfunction docstrings to a summary, the return contract
+    (`ExitCode(300)`; other exceptions propagate), and for Phonopy one sentence
+    that each file is read from a temporary copy under its stored name, so the
+    format is inferred from the suffix. Drop the suffix list, the cacheability
+    and `CalcFunctionNode` text, and the in-process rationale. Move the
+    CASTEP `RuntimeError`-by-message explanation to a comment beside the
+    `except RuntimeError` clause;
+  - reduce the `read_castep_file` and `read_phonopy` docstrings to one line;
+  - reword the `PHONOPY_READ_ERRORS` comment as in design.md Decision 4, with no
+    reference to the change.
+- [x] 6.2 In `src/aiida_pythonjob_ins/pythonjobs.py`, replace the
+  `prepare_read_phonopy_inputs` note with the shorter one in design.md
+  Decision 8, and drop the HDF5-or-text sentence from its description. Keep one
+  sentence on staging into the working directory and reading by basename.
+- [x] 6.3 In `src/aiida_pythonjob_ins/operations.py`, shorten the
+  `read_force_constants_from_phonopy` docstring to: what it reads, that it is
+  run by `prepare_read_phonopy_inputs` and is likely to be removed with it, that relative file names are joined to the working directory where that builder stages them (absolute names are used as given), and
+  the `born_name=None` option. Drop the HDF5-or-text sentence. Keep the module
+  free of AiiDA.
+- [x] 6.4 Verify with `uv run ruff check`, `uv run ruff format --check` and
+  `uv run pytest`. Run
+  `grep -rn 'Decision [0-9]' src/` and confirm it returns nothing.
+- [x] 6.5 Run `openspec validate add-phonopy-force-constants-source`.
+
 ## Workflow follow-up
 
 - Archive the change after review. On archive, cut back any README text that
