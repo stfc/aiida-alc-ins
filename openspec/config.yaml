@@ -99,9 +99,11 @@ operations:
         completing the task; do not enshrine them into the permanent test suite.
   archive:
     guidance:
-      - Keep the specs the single source of truth for behaviour. Where an
-        existing document duplicates a captured capability, cut it back to a
-        pointer rather than maintaining two descriptions that can drift.
+      - Keep the specs the single source of truth for behaviour. Where a
+        contributor-facing document (for example design notes) duplicates a
+        captured capability, cut it back to a pointer rather than maintaining two
+        descriptions that can drift. User-facing docs (README, workflow pages,
+        tutorials) keep their own descriptions and only rarely link to specs.
       - Verify that no ephemeral verification scripts, scratchpad files, or
         test-of-tests scaffolding leaked into the permanent test suite before
         archiving.
