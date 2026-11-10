@@ -8,6 +8,7 @@ reinstalled.
 from __future__ import annotations
 
 from importlib.metadata import distribution
+from inspect import isclass
 
 import pytest
 from aiida.plugins import DataFactory, WorkflowFactory
@@ -75,4 +76,4 @@ def test_every_declared_entry_point_loads():
 
     for entry_point in declared:
         loaded = entry_point.load()
-        assert isinstance(loaded, type), entry_point.name
+        assert isclass(loaded), entry_point.name
