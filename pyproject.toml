@@ -13,7 +13,7 @@ build-backend = "uv_build"
 
 [project]
 name = "aiida-alc-ins"
-version = "0.1.0"
+version = "0.2.0.dev"
 description = "Proof-of-concept AiiDA plugin wrapping INS Python libraries (Euphonic first) via aiida-pythonjob."
 readme = "README.md"
 # Relaxed to >=3.11 for broad Python version compatibility
