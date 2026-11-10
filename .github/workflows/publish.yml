@@ -1,0 +1,130 @@
+# Build, test and publish the distribution to PyPI.
+#
+# A GitHub release with a tag which does not start with `v` is
+# skipped without a failure, so dummy releases
+# (e.g. for data archiving) are not automatically uploaded to PyPI.
+#
+# Actions are pinned to commit SHAs, with the release in a comment, because these
+# jobs can hold publishing credentials.
+#
+# See RELEASING.md for more info.
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build and upload (branch, tag or commit)
+        required: true
+
+permissions: {}
+
+jobs:
+  build:
+    # A dispatch has no release tag, so the first clause lets it through.
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout from ref
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.12"
+
+      - name: Check that the tag matches the declared version
+        # Only `v`-prefixed tags reach this step: a bare `0.1.0` is
+        # not checked, but can only end up on PyPI from a manual
+        # dispatch.
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: test "${TAG#v}" = "$(uv version --short)"
+
+      - name: Refuse a development version
+        run: |
+          uv run --no-project --with packaging python -c '
+          import sys
+          from packaging.version import Version
+          version = Version(sys.argv[1])
+          if version.is_devrelease:
+              sys.exit(f"{version} is a development release; not uploading to PyPI")
+          ' "$(uv version --short)"
+
+      - name: Build the source distribution and the wheel
+        run: uv build
+
+      - name: Check the distribution metadata
+        run: uvx twine check dist/*
+
+      - name: Upload the distributions
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+
+  test-wheel:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # Wheel does not contain the tests or pyproject.toml, we still need checkout here
+      - name: Checkout from ref
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}
+          persist-credentials: false
+
+      - name: Download the distributions
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+
+      - name: Create a Python 3.11 test environment
+        run: uv venv --python 3.11 "$RUNNER_TEMP/venv"
+
+      - name: Install the wheel and the dev group
+        run: uv pip install --python "$RUNNER_TEMP/venv/bin/python" dist/*.whl --group dev
+
+      - name: Check that the package is imported from the installed wheel
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -c '
+          import aiida_pythonjob_ins
+          assert "site-packages" in aiida_pythonjob_ins.__file__, aiida_pythonjob_ins.__file__
+          print(aiida_pythonjob_ins.__file__)
+          '
+
+      - name: Run the tests against the installed wheel
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -m pytest -m "not containerized"
+
+  publish:
+    needs: [build, test-wheel]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/aiida-alc-ins/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download the distributions
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
