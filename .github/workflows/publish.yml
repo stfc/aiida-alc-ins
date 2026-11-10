@@ -1,0 +1,136 @@
+# Build, test and publish the distribution to PyPI. The file name must stay
+# `publish.yml`: the trusted publisher on PyPI is configured with it.
+#
+# Three jobs, in order: `build` (no credentials) makes and checks the sdist and
+# wheel; `test-wheel` (no credentials) installs the wheel into a clean Python 3.11
+# environment and runs the suite against it; `publish` (id-token only) uploads the
+# files those jobs produced. A GitHub release whose tag does not start with `v` is
+# skipped without a failure, so releases made for other purposes never upload.
+# See openspec/changes/prepare-pypi-release/design.md for the reasoning.
+name: Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build and publish
+        required: true
+
+permissions: {}
+
+jobs:
+  build:
+    # A dispatch has no release tag, so the first clause lets it through.
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the release ref
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          # Pinned to the uv series the build backend range in pyproject.toml covers.
+          version: "0.13.7"
+          python-version: "3.12"
+
+      - name: Check that the tag matches the declared version
+        # Only `v`-prefixed tags reach this step, because the job is skipped for
+        # any other tag. Were a bare `0.1.0` passed, `${TAG#v}` would leave it
+        # unchanged and the check would pass.
+        if: github.event_name == 'release'
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: test "${TAG#v}" = "$(uv version --short)"
+
+      - name: Refuse a development version
+        run: |
+          uv run --no-project --with packaging python -c '
+          import sys
+          from packaging.version import Version
+          version = Version(sys.argv[1])
+          sys.exit(f"{version} is a development release; not publishing") if version.is_devrelease else None
+          ' "$(uv version --short)"
+
+      - name: Build the source distribution and the wheel
+        run: uv build
+
+      - name: Check the distribution metadata
+        run: uvx twine check dist/*
+
+      - name: Upload the distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test-wheel:
+    # Skipped automatically when `build` is skipped.
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the release ref
+        uses: actions/checkout@v4
+        with:
+          # The wheel does not contain the tests or pyproject.toml, so the
+          # checkout supplies only those. The package is imported from the wheel.
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}
+          persist-credentials: false
+
+      - name: Download the distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.13.7"
+
+      - name: Create a Python 3.11 environment
+        # 3.11 is the oldest supported Python, so this also checks the lower
+        # bound of requires-python. Created outside the checkout.
+        run: uv venv --python 3.11 "$RUNNER_TEMP/venv"
+
+      - name: Install the wheel and the dev group
+        run: uv pip install --python "$RUNNER_TEMP/venv/bin/python" dist/*.whl --group dev
+
+      - name: Check that the package is imported from the installed wheel
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -c '
+          import aiida_pythonjob_ins
+          assert "site-packages" in aiida_pythonjob_ins.__file__, aiida_pythonjob_ins.__file__
+          print(aiida_pythonjob_ins.__file__)
+          '
+
+      - name: Run the tests against the installed wheel
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -m pytest -m "not containerized"
+
+  publish:
+    needs: [build, test-wheel]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/aiida-alc-ins/
+    permissions:
+      id-token: write
+    steps:
+      - name: Download the distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1

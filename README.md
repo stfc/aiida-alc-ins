@@ -1,4 +1,4 @@
-# aiida-pythonjob-ins
+# aiida-alc-ins
 
 ### Caveat: agentic coding
 
@@ -47,6 +47,15 @@ guarantees is specified in [`openspec/specs/`](./openspec/specs/), and
 some more human-friendly reasoning behind the design is recorded in
 [`docs/source/design_notes.rst`](./docs/source/design_notes.rst).
 
+
+## Installation
+
+```bash
+pip install aiida-alc-ins
+```
+
+The PyPI distribution is `aiida-alc-ins`, but the import package is still
+`aiida_pythonjob_ins` until 0.2, when it is renamed to `aiida_alc_ins`.
 
 ## Development setup
 

@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The PyPI distribution name `aiida-alc-ins`. The import package
+  `aiida_pythonjob_ins` and the entry-point names (`pythonjob_ins.*`) keep their
+  current names until 0.2, when they are renamed to `aiida_alc_ins` and
+  `alc_ins`.
+- `aiida_pythonjob_ins.__version__`, read from the installed distribution's
+  metadata. AiiDA records it as the plugin version in the provenance of each
+  process.
 - `ForceConstantsWorkChain`, a public, standalone workflow registered as the
   `pythonjob_ins.force_constants` entry point. It resolves exactly one
   force-constants source into a `force_constants` output:
@@ -74,4 +81,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `should_read_castep`, `read_force_constants` and `assign_force_constants`
   outline steps. The name now refers to the standalone workflow added above.
 
-[Unreleased]: https://github.com/ajjackson/aiida_pythonjob_ins/tree/HEAD
+[Unreleased]: https://github.com/stfc/aiida-alc-ins/tree/HEAD

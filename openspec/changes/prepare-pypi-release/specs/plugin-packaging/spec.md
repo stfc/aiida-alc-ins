@@ -43,6 +43,12 @@ runs of this package's workflows SHALL record the package version.
   distribution is installed
 - **THEN** it equals the version in the installed distribution's metadata
 
+#### Scenario: The reported version matches the declared version
+
+- **WHEN** `aiida_pythonjob_ins.__version__` is read in an environment where the
+  distribution is installed from the current source
+- **THEN** it equals the version declared in the project's configuration
+
 #### Scenario: Provenance records the plugin version
 
 - **WHEN** a workflow from this package runs

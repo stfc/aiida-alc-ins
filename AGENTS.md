@@ -1,4 +1,4 @@
-# Agent Guidelines for `aiida-pythonjob-ins` (AGENTS.md)
+# Agent Guidelines for `aiida-alc-ins` (AGENTS.md)
 
 This file defines runtime constraints, architectural invariants, and coding conventions for AI agents working in this repository.
 
@@ -6,7 +6,7 @@ This file defines runtime constraints, architectural invariants, and coding conv
 
 ## 1. Project Purpose & Exemplar Role
 
-`aiida-pythonjob-ins` is an AiiDA plugin that executes inelastic neutron scattering (INS) and lattice dynamics Python libraries—specifically [Euphonic](https://euphonic.readthedocs.io), [abinslib](https://isisneutronmuon.github.io/abINS_lib/), and [resins](https://pace-neutrons.github.io/resins/)—using the [`aiida-pythonjob`](https://github.com/aiidateam/aiida-pythonjob) execution model instead of traditional command-line wrappers.
+`aiida-alc-ins` is an AiiDA plugin that executes inelastic neutron scattering (INS) and lattice dynamics Python libraries—specifically [Euphonic](https://euphonic.readthedocs.io), [abinslib](https://isisneutronmuon.github.io/abINS_lib/), and [resins](https://pace-neutrons.github.io/resins/)—using the [`aiida-pythonjob`](https://github.com/aiidateam/aiida-pythonjob) execution model instead of traditional command-line wrappers.
 
 ### Exemplar Quality & Documentation Style
 This codebase is an **architectural exemplar and proof of concept** for future `aiida-pythonjob` plugins developed across the Ada Lovelace Centre (ALC) and STFC:

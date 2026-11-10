@@ -32,6 +32,68 @@ wheels = [
 ]
 
 [[package]]
+name = "aiida-alc-ins"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "abinslib" },
+    { name = "aiida-core" },
+    { name = "aiida-pythonjob" },
+    { name = "euphonic", extra = ["phonopy-reader"] },
+    { name = "resins" },
+    { name = "seekpath" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "aiida-hyperqueue" },
+    { name = "filelock" },
+    { name = "pytest" },
+    { name = "pytest-timeout" },
+    { name = "pytest-xdist" },
+    { name = "ruff" },
+]
+doc = [
+    { name = "furo" },
+    { name = "graphviz" },
+    { name = "matplotlib" },
+    { name = "myst-parser" },
+    { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "sphinx-autoapi" },
+    { name = "sphinx-gallery" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "abinslib", specifier = "~=0.2.0" },
+    { name = "aiida-core", specifier = ">=2.6,<3" },
+    { name = "aiida-pythonjob", specifier = "~=0.5.2" },
+    { name = "euphonic", extras = ["phonopy-reader"], specifier = "~=2.0" },
+    { name = "resins", specifier = "~=0.1.0" },
+    { name = "seekpath", specifier = ">=2.2.1,<3" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "aiida-hyperqueue", specifier = ">=0.4" },
+    { name = "filelock", specifier = ">=3.12" },
+    { name = "pytest", specifier = ">=8" },
+    { name = "pytest-timeout", specifier = ">=2.3" },
+    { name = "pytest-xdist", specifier = ">=3" },
+    { name = "ruff", specifier = ">=0.10" },
+]
+doc = [
+    { name = "furo" },
+    { name = "graphviz" },
+    { name = "matplotlib" },
+    { name = "myst-parser", specifier = ">=4" },
+    { name = "sphinx", specifier = ">=8,<10" },
+    { name = "sphinx-autoapi", specifier = ">=3.5" },
+    { name = "sphinx-gallery", specifier = ">=0.19" },
+]
+
+[[package]]
 name = "aiida-core"
 version = "2.8.1"
 source = { registry = "https://pypi.org/simple" }
@@ -98,68 +160,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ce/43/f8bb3199d9097dd8c0be0858041bf0a350cd9795b26eab756338fe1d4241/aiida_pythonjob-0.5.2.tar.gz", hash = "sha256:2512a8e3440124a427225188d539ee660302272d3aac2bd12722263f60cd8e82", size = 42115, upload-time = "2026-03-01T19:58:08.686Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/44/2a/9646f438580ef5a6681ade6ec2a9f136708f4d65167a1392396ced3ce0bb/aiida_pythonjob-0.5.2-py3-none-any.whl", hash = "sha256:00304fc584cb22c34b0ab8c3eb4b0574a2364349304c1cc7fd3d9c988b30afea", size = 38734, upload-time = "2026-03-01T19:58:07.501Z" },
-]
-
-[[package]]
-name = "aiida-pythonjob-ins"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "abinslib" },
-    { name = "aiida-core" },
-    { name = "aiida-pythonjob" },
-    { name = "euphonic", extra = ["phonopy-reader"] },
-    { name = "resins" },
-    { name = "seekpath" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "aiida-hyperqueue" },
-    { name = "filelock" },
-    { name = "pytest" },
-    { name = "pytest-timeout" },
-    { name = "pytest-xdist" },
-    { name = "ruff" },
-]
-doc = [
-    { name = "furo" },
-    { name = "graphviz" },
-    { name = "matplotlib" },
-    { name = "myst-parser" },
-    { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "sphinx-autoapi" },
-    { name = "sphinx-gallery" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "abinslib", specifier = "~=0.2.0" },
-    { name = "aiida-core", specifier = ">=2.6,<3" },
-    { name = "aiida-pythonjob", specifier = "~=0.5.2" },
-    { name = "euphonic", extras = ["phonopy-reader"], specifier = "~=2.0" },
-    { name = "resins", specifier = "~=0.1.0" },
-    { name = "seekpath", specifier = ">=2.2.1,<3" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "aiida-hyperqueue", specifier = ">=0.4" },
-    { name = "filelock", specifier = ">=3.12" },
-    { name = "pytest", specifier = ">=8" },
-    { name = "pytest-timeout", specifier = ">=2.3" },
-    { name = "pytest-xdist", specifier = ">=3" },
-    { name = "ruff", specifier = ">=0.10" },
-]
-doc = [
-    { name = "furo" },
-    { name = "graphviz" },
-    { name = "matplotlib" },
-    { name = "myst-parser", specifier = ">=4" },
-    { name = "sphinx", specifier = ">=8,<10" },
-    { name = "sphinx-autoapi", specifier = ">=3.5" },
-    { name = "sphinx-gallery", specifier = ">=0.19" },
 ]
 
 [[package]]

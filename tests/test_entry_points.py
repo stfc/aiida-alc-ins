@@ -7,6 +7,8 @@ reinstalled.
 
 from __future__ import annotations
 
+from importlib.metadata import distribution
+
 import pytest
 from aiida.plugins import DataFactory, WorkflowFactory
 
@@ -55,3 +57,22 @@ def test_workflow_plugin_registration(aiida_profile, entry_point_name, expected_
     """Workflow entry points resolve to their expected classes via WorkflowFactory."""
     resolved_class = WorkflowFactory(entry_point_name)
     assert resolved_class is expected_class
+
+
+def test_every_declared_entry_point_loads():
+    """Every entry point the distribution declares in the AiiDA groups loads as a class.
+
+    Driven by the installed distribution's metadata rather than the hand-written
+    lists above, so a newly declared entry point is covered without editing this
+    file.
+    """
+    declared = [
+        entry_point
+        for entry_point in distribution("aiida-alc-ins").entry_points
+        if entry_point.group in {"aiida.data", "aiida.workflows"}
+    ]
+    assert declared
+
+    for entry_point in declared:
+        loaded = entry_point.load()
+        assert isinstance(loaded, type), entry_point.name

@@ -28,22 +28,29 @@ None of this exists yet; this change adds it.
 - Add `__version__` to `aiida_pythonjob_ins`, derived from the installed
   distribution's metadata, so `pyproject.toml` stays the single place where the
   version is written.
-- Add a release workflow that builds the source and wheel distributions, verifies
-  them, and publishes to PyPI through trusted publishing. It runs when a GitHub
-  release is published, and on manual dispatch with a choice of PyPI or TestPyPI,
-  so that release candidates and rehearsals do not need a release page.
-- Verify, before anything is uploaded, that the version being released matches the
-  version in `pyproject.toml`, and that the built wheel installs cleanly and
-  exposes every declared entry point.
+- Add a release workflow that builds the source and wheel distributions, tests the
+  wheel, and publishes to PyPI through trusted publishing. It runs when a GitHub
+  release is published, and on manual dispatch of a chosen ref, so that release
+  candidates and post-release builds do not need a release page.
+- Ignore GitHub releases whose tag does not start with `v`, so that releases made
+  for other purposes, such as holding reference data, never start an upload to
+  PyPI. The GitHub release itself is unaffected.
+- Before anything is uploaded, verify that the version being released matches the
+  version in `pyproject.toml`, that it is not a development version, and that the
+  test suite passes against the built wheel installed into a clean environment.
+- Add two tests that belong in the ordinary suite, not only in releases: every
+  entry point the distribution declares loads, and `__version__` equals the version
+  declared in `pyproject.toml`.
 - Fill in the missing PyPI metadata (project URLs, authors, classifiers,
   keywords).
 - Update the places that carry the distribution name: the documentation build,
   the README install instructions, `AGENTS.md`, the OpenSpec project context and
   the changelog links.
-- Document the release procedure for maintainers, including the one-off PyPI
-  setup and the version number convention: the release commit carries the release
-  version, and `main` carries the next development version (such as `0.2.0.dev0`)
-  between releases.
+- Document the routine release procedure for maintainers, including the version
+  number convention (the release commit carries the release version, and `main`
+  carries the next development version, such as `0.2.0.dev0`, between releases)
+  and how to correct a bad release. The one-off PyPI and GitHub setup is not part
+  of that document.
 
 ### Assumption
 
@@ -56,7 +63,7 @@ aliases or migration, and this change adds none.
 ### New Capabilities
 
 - `release-publishing`: how a release reaches PyPI: the triggers, the checks that
-  gate publication, and the separation between building and publishing.
+  gate the upload, and the separation between building and uploading.
 
 ### Modified Capabilities
 
@@ -72,22 +79,27 @@ aliases or migration, and this change adds none.
 - Registering the plugin with the AiiDA plugin registry. That waits for 0.2, when
   the names are unified.
 - Deriving the version from git tags, or changing the build backend.
-- Running the full test suite, or compiled-wheel tests, in the release workflow.
-  The suite runs in the existing CI; the release workflow checks only the built
-  distributions.
+- Publishing to TestPyPI. The package is pure Python, its build is simple, and the
+  checks above run before any upload. A bad release is corrected by yanking it and
+  publishing a post-release or a new version.
+- Running the containerized tests, or a Python-version matrix, in the release
+  workflow. Both stay in the existing CI. The release workflow runs the remaining
+  tests once, on the oldest supported Python.
 - Publishing versioned documentation.
 
 ## Impact
 
-- `pyproject.toml`: distribution name, PyPI metadata, build-backend module name,
-  version handling; the header comment.
+- `pyproject.toml`: distribution name, PyPI metadata, build-backend module name;
+  the header comment.
 - `src/aiida_pythonjob_ins/__init__.py`: `__version__`.
 - `.github/workflows/`: a new release workflow.
+- `tests/`: a version test module and a metadata-driven entry-point test.
 - `uv.lock`: the project's own entry follows the new name.
 - `docs/source/conf.py`, `docs/source/index.rst`, `README.md`, `AGENTS.md`,
   `openspec/config.yaml`, `CHANGELOG.md`: names, install instructions, links.
-- Contributor documentation: the release procedure.
-- External, outside the repository: a pending trusted publisher on PyPI and on
-  TestPyPI, and matching `pypi` and `testpypi` environments in the GitHub
-  repository settings.
-- Dependencies: none new.
+- A root-level `RELEASING.md` for maintainers.
+- External, outside the repository: a pending trusted publisher on PyPI and a
+  matching `pypi` environment in the GitHub repository settings.
+- Dependencies: none new, in the runtime dependencies or the `dev` group. The
+  metadata check runs `twine`, and the development-version check runs `packaging`,
+  both ephemerally through `uv`.

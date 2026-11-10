@@ -1,15 +1,18 @@
-# Packaging + tooling configuration for the aiida-pythonjob-ins proof-of-concept.
+# Packaging + tooling configuration for the aiida-alc-ins distribution (import
+# package aiida_pythonjob_ins until 0.2; see openspec/changes/prepare-pypi-release).
 # See openspec/specs/ for the behaviour this package guarantees, and
 # docs/source/design_notes.rst for the design rationale.
 # Use uv's native build backend for consistency with the uv-based workflow
 # (https://docs.astral.sh/uv/concepts/build-backend/). setuptools would be the
 # conservative "established standard" alternative.
 [build-system]
-requires = ["uv_build>=0.11,<0.12"]
+# Upper bound covers the uv 0.11-0.13 series. The release workflow pins uv
+# to 0.13.7 (publish.yml), which is inside this range.
+requires = ["uv_build>=0.11,<0.14"]
 build-backend = "uv_build"
 
 [project]
-name = "aiida-pythonjob-ins"
+name = "aiida-alc-ins"
 version = "0.1.0"
 description = "Proof-of-concept AiiDA plugin wrapping INS Python libraries (Euphonic first) via aiida-pythonjob."
 readme = "README.md"
@@ -17,6 +20,27 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-or-later"
 license-files = ["LICENSE"]
+authors = [{ name = "Adam J. Jackson", email = "adam.jackson@stfc.ac.uk" }]
+keywords = [
+    "aiida",
+    "phonons",
+    "lattice dynamics",
+    "inelastic neutron scattering",
+    "euphonic",
+    "workflows",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: AiiDA",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 # Bounds reflect *our own* API usage, not sibling dependencies' constraints (the
 # resolver intersects everyone's requirements). Upper caps are used only where
 # individually justified, to avoid needless conflicts with co-installed plugins.
@@ -57,6 +81,16 @@ dependencies = [
     # declare here.
     "resins~=0.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/stfc/aiida-alc-ins"
+Documentation = "https://stfc.github.io/aiida-alc-ins/"
+Issues = "https://github.com/stfc/aiida-alc-ins/issues"
+Changelog = "https://github.com/stfc/aiida-alc-ins/blob/main/CHANGELOG.md"
+
+# The import package is still aiida_pythonjob_ins; the 0.2 rename removes this.
+[tool.uv.build-backend]
+module-name = "aiida_pythonjob_ins"
 
 [dependency-groups]
 # Dev/test tooling (PEP 735 group; installed by `uv sync`).

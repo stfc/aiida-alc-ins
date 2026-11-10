@@ -26,10 +26,10 @@ load_profile(SqliteTempBackend.create_profile("docs"), allow_switch=True)
 # Local Sphinx extensions live in ``_ext``.
 sys.path.insert(0, str(Path(__file__).resolve().parent / "_ext"))
 
-project = "aiida-pythonjob-ins"
+project = "aiida-alc-ins"
 copyright = "2026, STFC"  # noqa: A001
 author = "Science and Technology Facilities Council"
-release = importlib.metadata.version("aiida-pythonjob-ins")
+release = importlib.metadata.version("aiida-alc-ins")
 
 # -- General configuration ---------------------------------------------------
 extensions = [
