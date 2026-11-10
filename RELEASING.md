@@ -52,9 +52,10 @@ releases `v<version>`.
 To upload a build without a GitHub release, for example a release candidate:
 
 1. In the Actions tab, open the **Publish** workflow and choose **Run workflow**.
-2. Enter the git ref to build, such as a branch or commit.
-3. The workflow uploads the version declared at that ref. Development versions
-   are refused.
+2. The form has two inputs. **Use workflow from** is the branch whose
+   `publish.yml` runs. **ref** is what is built and uploaded, at the version
+   `pyproject.toml` declares there. Set both to the same branch or tag.
+3. Development versions are refused.
 
 PyPI hides pre-releases such as `0.2.0rc1` from default installs, so a release
 candidate is installed only with an explicit version.

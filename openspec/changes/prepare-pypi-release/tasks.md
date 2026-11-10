@@ -26,10 +26,10 @@ Notes for the implementer:
   and that `git diff uv.lock` changes only the project's own entry.
 - [x] 1.2 In `src/aiida_pythonjob_ins/__init__.py`, add `__version__` as in
   design.md Decision 2, with a one-line comment saying it exists because AiiDA
-  records the plugin version from it. Add `tests/test_version.py` with three tests:
-  `__version__` equals `importlib.metadata.version("aiida-alc-ins")`;
-  `__version__` equals the `project.version` read from `pyproject.toml` with
-  `tomllib`; and a `ForceConstantsWorkChain` run given a prepared
+  records the plugin version from it. Add `tests/test_version.py` with two tests:
+  `__version__` equals both `importlib.metadata.version("aiida-alc-ins")` and the
+  `project.version` read from `pyproject.toml` with `tomllib`; and a
+  `ForceConstantsWorkChain` run given a prepared
   `ForceConstantsData` records the same value as
   `node.base.attributes.get("version")["plugin"]`. Verify with
   `uv run pytest tests/test_version.py tests/test_import_purity.py`.

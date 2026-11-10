@@ -14,16 +14,16 @@ from aiida_pythonjob_ins.data import ForceConstantsData
 from aiida_pythonjob_ins.workflows.force_constants import ForceConstantsWorkChain
 
 
-def test_version_matches_installed_metadata():
-    """``__version__`` equals the version of the installed distribution."""
-    assert aiida_pythonjob_ins.__version__ == version("aiida-alc-ins")
+def test_version_matches_declared_and_installed():
+    """``__version__`` is the version declared in ``pyproject.toml`` and installed.
 
-
-def test_version_matches_pyproject():
-    """``__version__`` equals the version declared in ``pyproject.toml``."""
+    Comparing with the declaration also catches an installed environment that is
+    stale after a version change.
+    """
     pyproject = Path(__file__).parents[1] / "pyproject.toml"
     declared = tomllib.loads(pyproject.read_text())["project"]["version"]
     assert aiida_pythonjob_ins.__version__ == declared
+    assert version("aiida-alc-ins") == declared
 
 
 def test_provenance_records_plugin_version(aiida_profile, quartz_castep_bin):

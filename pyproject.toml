@@ -1,13 +1,13 @@
 # Packaging + tooling configuration for the aiida-alc-ins distribution (import
-# package aiida_pythonjob_ins until 0.2; see openspec/changes/prepare-pypi-release).
+# package aiida_pythonjob_ins until 0.2; see RELEASING.md).
 # See openspec/specs/ for the behaviour this package guarantees, and
 # docs/source/design_notes.rst for the design rationale.
 # Use uv's native build backend for consistency with the uv-based workflow
 # (https://docs.astral.sh/uv/concepts/build-backend/). setuptools would be the
 # conservative "established standard" alternative.
 [build-system]
-# Upper bound covers the uv 0.11-0.13 series. The release workflow pins uv
-# to 0.13.7 (publish.yml), which is inside this range.
+# Bounded to the uv series required by [tool.uv] below, as uv's documentation
+# recommends for its build backend.
 requires = ["uv_build>=0.11,<0.14"]
 build-backend = "uv_build"
 
@@ -86,7 +86,12 @@ dependencies = [
 Homepage = "https://github.com/stfc/aiida-alc-ins"
 Documentation = "https://stfc.github.io/aiida-alc-ins/"
 Issues = "https://github.com/stfc/aiida-alc-ins/issues"
-Changelog = "https://github.com/stfc/aiida-alc-ins/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/stfc/aiida-alc-ins/blob/HEAD/CHANGELOG.md"
+
+# The uv series for local use and for every workflow: setup-uv reads this when a
+# workflow does not name a version, so there is one place to change it.
+[tool.uv]
+required-version = ">=0.11,<0.14"
 
 # The import package is still aiida_pythonjob_ins; the 0.2 rename removes this.
 [tool.uv.build-backend]

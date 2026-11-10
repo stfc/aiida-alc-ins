@@ -89,10 +89,12 @@ aliases or migration, and this change adds none.
 
 ## Impact
 
-- `pyproject.toml`: distribution name, PyPI metadata, build-backend module name;
-  the header comment.
+- `pyproject.toml`: distribution name, PyPI metadata, build-backend module name,
+  and a `required-version` for uv that the workflows read, so they no longer pin
+  uv individually; the header comment.
 - `src/aiida_pythonjob_ins/__init__.py`: `__version__`.
-- `.github/workflows/`: a new release workflow.
+- `.github/workflows/`: a new release workflow; the existing workflows drop their
+  uv version pins.
 - `tests/`: a version test module and a metadata-driven entry-point test.
 - `uv.lock`: the project's own entry follows the new name.
 - `docs/source/conf.py`, `docs/source/index.rst`, `README.md`, `AGENTS.md`,

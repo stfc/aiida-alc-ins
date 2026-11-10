@@ -6,7 +6,7 @@
 # environment and runs the suite against it; `publish` (id-token only) uploads the
 # files those jobs produced. A GitHub release whose tag does not start with `v` is
 # skipped without a failure, so releases made for other purposes never upload.
-# See openspec/changes/prepare-pypi-release/design.md for the reasoning.
+# Maintainer steps: RELEASING.md.
 name: Publish
 
 on:
@@ -15,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: Git ref to build and publish
+        description: Git ref to build and upload (branch, tag or commit)
         required: true
 
 permissions: {}
@@ -37,8 +37,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
-          # Pinned to the uv series the build backend range in pyproject.toml covers.
-          version: "0.13.7"
           python-version: "3.12"
 
       - name: Check that the tag matches the declared version
@@ -56,7 +54,8 @@ jobs:
           import sys
           from packaging.version import Version
           version = Version(sys.argv[1])
-          sys.exit(f"{version} is a development release; not publishing") if version.is_devrelease else None
+          if version.is_devrelease:
+              sys.exit(f"{version} is a development release; not uploading to PyPI")
           ' "$(uv version --short)"
 
       - name: Build the source distribution and the wheel
@@ -94,8 +93,6 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
-        with:
-          version: "0.13.7"
 
       - name: Create a Python 3.11 environment
         # 3.11 is the oldest supported Python, so this also checks the lower

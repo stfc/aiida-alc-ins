@@ -295,9 +295,9 @@ on every CI run:
   `aiida.workflows` groups loads, driven by the installed distribution's metadata
   so that a newly declared entry point cannot be left out of the hand-written
   list in `tests/test_entry_points.py`;
-- tests that `__version__` equals the installed metadata, that it equals the
-  version declared in `pyproject.toml` (which catches a stale editable install),
-  and that a process records it as its plugin version.
+- tests that `__version__` equals both the installed metadata and the version
+  declared in `pyproject.toml` (the latter catches a stale editable install), and
+  that a process records it as its plugin version.
 
 Alternatives considered:
 
