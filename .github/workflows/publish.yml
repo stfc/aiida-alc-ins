@@ -1,12 +1,13 @@
-# Build, test and publish the distribution to PyPI. The file name must stay
-# `publish.yml`: the trusted publisher on PyPI is configured with it.
+# Build, test and publish the distribution to PyPI.
 #
-# Three jobs, in order: `build` (no credentials) makes and checks the sdist and
-# wheel; `test-wheel` (no credentials) installs the wheel into a clean Python 3.11
-# environment and runs the suite against it; `publish` (id-token only) uploads the
-# files those jobs produced. A GitHub release whose tag does not start with `v` is
-# skipped without a failure, so releases made for other purposes never upload.
-# Maintainer steps: RELEASING.md.
+# A GitHub release with a tag which does not start with `v` is
+# skipped without a failure, so dummy releases
+# (e.g. for data archiving) are not automatically uploaded to PyPI.
+#
+# Actions are pinned to commit SHAs, with the release in a comment, because these
+# jobs can hold publishing credentials.
+#
+# See RELEASING.md for more info.
 name: Publish
 
 on:
@@ -28,21 +29,21 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Check out the release ref
-        uses: actions/checkout@v4
+      - name: Checkout from ref
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}
           persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           python-version: "3.12"
 
       - name: Check that the tag matches the declared version
-        # Only `v`-prefixed tags reach this step, because the job is skipped for
-        # any other tag. Were a bare `0.1.0` passed, `${TAG#v}` would leave it
-        # unchanged and the check would pass.
+        # Only `v`-prefixed tags reach this step: a bare `0.1.0` is
+        # not checked, but can only end up on PyPI from a manual
+        # dispatch.
         if: github.event_name == 'release'
         env:
           TAG: ${{ github.event.release.tag_name }}
@@ -65,38 +66,34 @@ jobs:
         run: uvx twine check dist/*
 
       - name: Upload the distributions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dist
           path: dist/
 
   test-wheel:
-    # Skipped automatically when `build` is skipped.
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
     steps:
-      - name: Check out the release ref
-        uses: actions/checkout@v4
+      # Wheel does not contain the tests or pyproject.toml, we still need checkout here
+      - name: Checkout from ref
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The wheel does not contain the tests or pyproject.toml, so the
-          # checkout supplies only those. The package is imported from the wheel.
           ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.ref }}
           persist-credentials: false
 
       - name: Download the distributions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: dist
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
 
-      - name: Create a Python 3.11 environment
-        # 3.11 is the oldest supported Python, so this also checks the lower
-        # bound of requires-python. Created outside the checkout.
+      - name: Create a Python 3.11 test environment
         run: uv venv --python 3.11 "$RUNNER_TEMP/venv"
 
       - name: Install the wheel and the dev group
@@ -124,10 +121,10 @@ jobs:
       id-token: write
     steps:
       - name: Download the distributions
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: dist
           path: dist
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
