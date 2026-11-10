@@ -7,15 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0]
+
+This is the first release to PyPI, intended to be the only such release in
+which the python library is named `aiida_pythonjob_ins`.
+
+Some "changes" are nonetheless included below: they are relative to
+these labelled github branches, used for aiidalab-alc-ins prototypes:
+
+- https://github.com/stfc/aiida-alc-ins/tree/py310
+- https://github.com/stfc/aiida-alc-ins/tree/py310-0.2
+
 ### Added
 
 - The PyPI distribution name `aiida-alc-ins`. The import package
-  `aiida_pythonjob_ins` and the entry-point names (`pythonjob_ins.*`) keep their
-  current names until 0.2, when they are renamed to `aiida_alc_ins` and
-  `alc_ins`.
+  `aiida_pythonjob_ins` and the entry-point names (`pythonjob_ins.*`) are retained until version 0.2.
 - `aiida_pythonjob_ins.__version__`, read from the installed distribution's
-  metadata. AiiDA records it as the plugin version in the provenance of each
-  process.
+  metadata. (This is expected by AiiDA and used for provenance.)
 - `ForceConstantsWorkChain`, a public, standalone workflow registered as the
   `pythonjob_ins.force_constants` entry point. It resolves exactly one
   force-constants source into a `force_constants` output:
@@ -27,12 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   Files are read in-process by a calcfunction. The workflow dispatches no jobs,
   takes no `Code`, and ends with `410 ERROR_READ_FAILED` if a file is unreadable.
+
 - `DispersionWorkChain`, `DosWorkChain` and `ToscaFromForceConstantsWorkChain`
-  accept Phonopy files directly, as `force_constants.phonopy`. Previously they
-  needed a `ForceConstantsData` node made in a separate step.
-- Bundled sample data `tests/data/phonopy/NaCl_hdf5/`: NaCl Phonopy output in
-  HDF5 form, from Euphonic's test suite. HDF5 force constants were already
-  readable; this adds test and documentation coverage.
+  now accept Phonopy files directly, as `force_constants.phonopy`.
 
 ### Changed
 
@@ -62,9 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CASTEP files are read in-process by a calcfunction, recorded as its own
   `CalcFunctionNode` in the provenance graph, instead of by a dispatched
-  `PythonJob`. This removes about 2.8 s of job overhead from a read that takes
-  about 0.1 s. `prepare_read_force_constants_inputs` remains available as an
-  example of `PythonJob` file staging.
+  `PythonJob`.
 
 - `prepare_read_phonopy_inputs` is documented as a demonstration of `PythonJob`
   file staging. Workflows read Phonopy files in-process through
