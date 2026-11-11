@@ -102,9 +102,9 @@ jobs:
       - name: Check that the package is imported from the installed wheel
         run: |
           "$RUNNER_TEMP/venv/bin/python" -c '
-          import aiida_pythonjob_ins
-          assert "site-packages" in aiida_pythonjob_ins.__file__, aiida_pythonjob_ins.__file__
-          print(aiida_pythonjob_ins.__file__)
+          import aiida_alc_ins
+          assert "site-packages" in aiida_alc_ins.__file__, aiida_alc_ins.__file__
+          print(aiida_alc_ins.__file__)
           '
 
       - name: Run the tests against the installed wheel
