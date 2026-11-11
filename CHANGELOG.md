@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0]
+
 ### Changed
 
 - **BREAKING**: Renamed the import package from `aiida_pythonjob_ins` to `aiida_alc_ins`.
@@ -89,5 +91,6 @@ these labelled github branches, used for aiidalab-alc-ins prototypes:
   `should_read_castep`, `read_force_constants` and `assign_force_constants`
   outline steps. The name now refers to the standalone workflow added above.
 
-[Unreleased]: https://github.com/stfc/aiida-alc-ins/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/stfc/aiida-alc-ins/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/stfc/aiida-alc-ins/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/stfc/aiida-alc-ins/releases/tag/v0.1.0
