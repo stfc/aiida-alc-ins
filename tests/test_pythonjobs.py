@@ -7,8 +7,8 @@ import pytest
 from aiida.orm import KpointsData, SinglefileData
 from euphonic import ForceConstants
 
-from aiida_pythonjob_ins.data import ForceConstantsData, QpointPhononModesData
-from aiida_pythonjob_ins.pythonjobs import (
+from aiida_alc_ins.data import ForceConstantsData, QpointPhononModesData
+from aiida_alc_ins.pythonjobs import (
     prepare_dispersion_inputs,
     prepare_dos_inputs,
     prepare_grid_interpolation_inputs,

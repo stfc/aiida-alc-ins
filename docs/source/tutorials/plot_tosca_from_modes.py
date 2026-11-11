@@ -1,7 +1,7 @@
 """TOSCA spectrum from precomputed phonon modes
 ==============================================
 
-Run :class:`~aiida_pythonjob_ins.workflows.ToscaFromModesWorkChain` on ethanol
+Run :class:`~aiida_alc_ins.workflows.ToscaFromModesWorkChain` on ethanol
 phonon modes to simulate the inelastic-neutron-scattering spectrum the TOSCA
 spectrometer would record, plot it grouped two different ways, and visualise the
 AiiDA provenance graph.
@@ -32,9 +32,9 @@ code = get_python_code()
 from aiida.plugins import DataFactory, WorkflowFactory
 
 # Load via the plugin factories (direct imports like
-# `from aiida_pythonjob_ins.data import QpointPhononModesData` also work)
-QpointPhononModesData = DataFactory("pythonjob_ins.qpoint_phonon_modes")
-ToscaFromModesWorkChain = WorkflowFactory("pythonjob_ins.tosca_from_modes")
+# `from aiida_alc_ins.data import QpointPhononModesData` also work)
+QpointPhononModesData = DataFactory("alc_ins.qpoint_phonon_modes")
+ToscaFromModesWorkChain = WorkflowFactory("alc_ins.tosca_from_modes")
 
 modes = QpointPhononModesData.from_json_file(
     example_data("ethanol_qpoint_phonon_modes.json")

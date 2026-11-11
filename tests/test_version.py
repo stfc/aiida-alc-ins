@@ -9,9 +9,9 @@ from pathlib import Path
 from aiida.engine import run_get_node
 from euphonic import ForceConstants
 
-import aiida_pythonjob_ins
-from aiida_pythonjob_ins.data import ForceConstantsData
-from aiida_pythonjob_ins.workflows.force_constants import ForceConstantsWorkChain
+import aiida_alc_ins
+from aiida_alc_ins.data import ForceConstantsData
+from aiida_alc_ins.workflows.force_constants import ForceConstantsWorkChain
 
 
 def test_version_matches_declared_and_installed():
@@ -22,7 +22,7 @@ def test_version_matches_declared_and_installed():
     """
     pyproject = Path(__file__).parents[1] / "pyproject.toml"
     declared = tomllib.loads(pyproject.read_text())["project"]["version"]
-    assert aiida_pythonjob_ins.__version__ == declared
+    assert aiida_alc_ins.__version__ == declared
     assert version("aiida-alc-ins") == declared
 
 
@@ -34,4 +34,4 @@ def test_provenance_records_plugin_version(aiida_profile, quartz_castep_bin):
 
     assert node.is_finished_ok, node.exit_status
     recorded = node.base.attributes.get("version")["plugin"]
-    assert recorded == aiida_pythonjob_ins.__version__
+    assert recorded == aiida_alc_ins.__version__

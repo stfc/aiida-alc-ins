@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from aiida.orm import StructureData
 
-from aiida_pythonjob_ins.conversions import crystal_to_structure
+from aiida_alc_ins.conversions import crystal_to_structure
 
 
 @runtime_checkable
@@ -41,7 +41,7 @@ class CrystalStructureMixin:
     def to_structure(self) -> StructureData:
         """Extract the wrapped object's ``.crystal`` as a native ``StructureData``.
 
-        Delegates to :func:`~aiida_pythonjob_ins.conversions.crystal_to_structure`
+        Delegates to :func:`~aiida_alc_ins.conversions.crystal_to_structure`
         (the single Crystal -> StructureData converter).
         """
         return crystal_to_structure(self.get_object().crystal)

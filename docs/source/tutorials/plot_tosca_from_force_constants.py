@@ -1,11 +1,11 @@
 """TOSCA spectrum from CASTEP force constants
 ============================================
 
-Run :class:`~aiida_pythonjob_ins.workflows.ToscaFromForceConstantsWorkChain` on
+Run :class:`~aiida_alc_ins.workflows.ToscaFromForceConstantsWorkChain` on
 quartz force constants (a CASTEP ``.castep_bin``). The workflow reads the force
 constants, samples phonon modes across the Brillouin zone, and delegates the
 spectrum calculation to
-:class:`~aiida_pythonjob_ins.workflows.ToscaFromModesWorkChain` -- which appears
+:class:`~aiida_alc_ins.workflows.ToscaFromModesWorkChain` -- which appears
 in the provenance graph as a called sub-workflow.
 
 .. note::
@@ -52,11 +52,9 @@ code = get_python_code()
 from aiida.plugins import WorkflowFactory
 
 # Load via WorkflowFactory (direct imports like
-# `from aiida_pythonjob_ins.workflows import ToscaFromForceConstantsWorkChain`
+# `from aiida_alc_ins.workflows import ToscaFromForceConstantsWorkChain`
 # also work)
-ToscaFromForceConstantsWorkChain = WorkflowFactory(
-    "pythonjob_ins.tosca_from_force_constants"
-)
+ToscaFromForceConstantsWorkChain = WorkflowFactory("alc_ins.tosca_from_force_constants")
 
 results, node = run_get_node(
     ToscaFromForceConstantsWorkChain,

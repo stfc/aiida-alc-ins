@@ -1,5 +1,5 @@
 # Packaging + tooling configuration for the aiida-alc-ins distribution (import
-# package aiida_pythonjob_ins until 0.2; see RELEASING.md).
+# package aiida_alc_ins).
 # See openspec/specs/ for the behaviour this package guarantees, and
 # docs/source/design_notes.rst for the design rationale.
 # Use uv's native build backend for consistency with the uv-based workflow
@@ -93,10 +93,6 @@ Changelog = "https://github.com/stfc/aiida-alc-ins/blob/HEAD/CHANGELOG.md"
 [tool.uv]
 required-version = ">=0.11,<0.14"
 
-# The import package is still aiida_pythonjob_ins; the 0.2 rename removes this.
-[tool.uv.build-backend]
-module-name = "aiida_pythonjob_ins"
-
 [dependency-groups]
 # Dev/test tooling (PEP 735 group; installed by `uv sync`).
 dev = [
@@ -124,16 +120,16 @@ doc = [
 # AiiDA discovers plugins via entry points; see
 # https://aiida.readthedocs.io/projects/aiida-core/en/stable/topics/plugins.html
 [project.entry-points."aiida.data"]
-"pythonjob_ins.crystal" = "aiida_pythonjob_ins.data.crystal:EuphonicCrystalData"
-"pythonjob_ins.force_constants" = "aiida_pythonjob_ins.data.force_constants:ForceConstantsData"
-"pythonjob_ins.qpoint_phonon_modes" = "aiida_pythonjob_ins.data.qpoint_phonon_modes:QpointPhononModesData"
+"alc_ins.crystal" = "aiida_alc_ins.data.crystal:EuphonicCrystalData"
+"alc_ins.force_constants" = "aiida_alc_ins.data.force_constants:ForceConstantsData"
+"alc_ins.qpoint_phonon_modes" = "aiida_alc_ins.data.qpoint_phonon_modes:QpointPhononModesData"
 
 [project.entry-points."aiida.workflows"]
-"pythonjob_ins.force_constants" = "aiida_pythonjob_ins.workflows.force_constants:ForceConstantsWorkChain"
-"pythonjob_ins.dispersion" = "aiida_pythonjob_ins.workflows.dispersion:DispersionWorkChain"
-"pythonjob_ins.dos" = "aiida_pythonjob_ins.workflows.dos:DosWorkChain"
-"pythonjob_ins.tosca_from_modes" = "aiida_pythonjob_ins.workflows.tosca:ToscaFromModesWorkChain"
-"pythonjob_ins.tosca_from_force_constants" = "aiida_pythonjob_ins.workflows.tosca:ToscaFromForceConstantsWorkChain"
+"alc_ins.force_constants" = "aiida_alc_ins.workflows.force_constants:ForceConstantsWorkChain"
+"alc_ins.dispersion" = "aiida_alc_ins.workflows.dispersion:DispersionWorkChain"
+"alc_ins.dos" = "aiida_alc_ins.workflows.dos:DosWorkChain"
+"alc_ins.tosca_from_modes" = "aiida_alc_ins.workflows.tosca:ToscaFromModesWorkChain"
+"alc_ins.tosca_from_force_constants" = "aiida_alc_ins.workflows.tosca:ToscaFromForceConstantsWorkChain"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

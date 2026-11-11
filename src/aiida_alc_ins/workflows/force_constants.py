@@ -1,7 +1,7 @@
 """Resolve force constants from a CASTEP file, Phonopy files or a prepared node.
 
 See :class:`ForceConstantsWorkChain`. Consuming workflows expose its inputs under
-``force_constants`` (see :mod:`aiida_pythonjob_ins.workflows.base`).
+``force_constants`` (see :mod:`aiida_alc_ins.workflows.base`).
 
 WorkChain reference:
 https://aiida.readthedocs.io/projects/aiida-core/en/stable/topics/workflows/write.html
@@ -16,7 +16,7 @@ import yaml
 from aiida.engine import ExitCode, WorkChain, calcfunction, if_
 from aiida.orm import SinglefileData
 
-from aiida_pythonjob_ins.data import ForceConstantsData
+from aiida_alc_ins.data import ForceConstantsData
 
 #: Exceptions Euphonic's Phonopy reader raises for unreadable or invalid input
 #: (malformed summary, HDF5 or text file). Anything else is a bug and propagates.

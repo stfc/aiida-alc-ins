@@ -7,11 +7,11 @@ independent.
 
 from __future__ import annotations
 
-from aiida_pythonjob_ins.workflows.base import (
+from aiida_alc_ins.workflows.base import (
     FromForceConstantsWorkChain,
     JobDispatchWorkChain,
 )
-from aiida_pythonjob_ins.workflows.tosca import ToscaFromModesWorkChain
+from aiida_alc_ins.workflows.tosca import ToscaFromModesWorkChain
 
 
 def test_job_dispatch_spec_has_code_and_options():

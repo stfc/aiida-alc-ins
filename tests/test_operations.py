@@ -23,8 +23,8 @@ from aiida_pythonjob import PythonJob
 from euphonic import ForceConstants, QpointPhononModes, Quantity, Spectrum1D, ureg
 from tests.assertions import assert_equivalent_force_constants
 
-from aiida_pythonjob_ins.data import ForceConstantsData, QpointPhononModesData
-from aiida_pythonjob_ins.operations import (
+from aiida_alc_ins.data import ForceConstantsData, QpointPhononModesData
+from aiida_alc_ins.operations import (
     broaden_tosca_spectrum,
     calculate_dispersion,
     calculate_dos,
@@ -36,14 +36,14 @@ from aiida_pythonjob_ins.operations import (
     read_force_constants_from_phonopy,
     tosca_energy_bins,
 )
-from aiida_pythonjob_ins.pythonjobs import (
+from aiida_alc_ins.pythonjobs import (
     prepare_dispersion_inputs,
     prepare_dos_inputs,
     prepare_read_phonopy_inputs,
     prepare_tosca_spectrum_inputs,
 )
 
-OPS_LOGGER = "aiida_pythonjob_ins.operations"
+OPS_LOGGER = "aiida_alc_ins.operations"
 
 
 def test_operations_emit_logs(quartz_castep_bin, caplog):

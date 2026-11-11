@@ -12,7 +12,7 @@ from aiida.orm import StructureData
 from euphonic import ForceConstants
 from tests.assertions import assert_equivalent_force_constants
 
-from aiida_pythonjob_ins.data import (
+from aiida_alc_ins.data import (
     EuphonicCrystalData,
     ForceConstantsData,
     QpointPhononModesData,

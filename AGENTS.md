@@ -21,7 +21,7 @@ This codebase is an **architectural exemplar and proof of concept** for future `
 The repository enforces strict separation of concerns across distinct layers:
 
 ```
-src/aiida_pythonjob_ins/
+src/aiida_alc_ins/
 ├── operations.py      # Pure Python scientific operations (AiiDA-free!)
 ├── pythonjobs.py      # Input builders wrapping operations as PythonJobs
 ├── serialization.py   # Serializers bridging Euphonic objects <-> custom Data nodes

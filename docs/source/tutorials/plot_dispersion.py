@@ -1,7 +1,7 @@
 """Phonon band structure from CASTEP force constants
 ====================================================
 
-Run :class:`~aiida_pythonjob_ins.workflows.DispersionWorkChain` on quartz force
+Run :class:`~aiida_alc_ins.workflows.DispersionWorkChain` on quartz force
 constants (a CASTEP ``.castep_bin``), plot the band structure, and visualise the
 AiiDA provenance graph that produced it.
 """
@@ -28,8 +28,8 @@ code = get_python_code()
 from aiida.plugins import WorkflowFactory
 
 # Load via WorkflowFactory (direct imports like
-# `from aiida_pythonjob_ins.workflows import DispersionWorkChain` also work)
-DispersionWorkChain = WorkflowFactory("pythonjob_ins.dispersion")
+# `from aiida_alc_ins.workflows import DispersionWorkChain` also work)
+DispersionWorkChain = WorkflowFactory("alc_ins.dispersion")
 
 results, node = run_get_node(
     DispersionWorkChain,

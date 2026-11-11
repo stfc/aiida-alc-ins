@@ -8,7 +8,7 @@ other, which a flat process spec cannot express honestly.
   modes and nothing else as a source; independently runnable.
 * :class:`ToscaFromForceConstantsWorkChain` -- resolves force constants
   by running
-  :class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+  :class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
   as a sub-workflow (it genuinely is a force-constants-sourced chain) while
   **composing** :class:`ToscaFromModesWorkChain` through AiiDA's exposed-input/output
   machinery, mirroring `PwBandsWorkChain` exposing `PwBaseWorkChain`
@@ -35,17 +35,17 @@ from aiida.engine import ExitCode, ToContext, calcfunction
 from aiida.orm import Float, List, Str, XyData
 from aiida_pythonjob import PythonJob
 
-from aiida_pythonjob_ins.conversions import (
+from aiida_alc_ins.conversions import (
     spectrum_collection_to_xydata,
     xydata_to_spectrum_collection,
 )
-from aiida_pythonjob_ins.data import QpointPhononModesData
-from aiida_pythonjob_ins.operations import broaden_tosca_spectrum
-from aiida_pythonjob_ins.pythonjobs import (
+from aiida_alc_ins.data import QpointPhononModesData
+from aiida_alc_ins.operations import broaden_tosca_spectrum
+from aiida_alc_ins.pythonjobs import (
     prepare_grid_interpolation_inputs,
     prepare_tosca_spectrum_inputs,
 )
-from aiida_pythonjob_ins.workflows.base import (
+from aiida_alc_ins.workflows.base import (
     FromForceConstantsWorkChain,
     JobDispatchWorkChain,
 )
@@ -219,13 +219,13 @@ class ToscaFromForceConstantsWorkChain(
     """Compute a TOSCA spectrum from force constants, via interpolated modes.
 
     Resolves force constants by running
-    :class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+    :class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
     as a sub-workflow (a CASTEP file, read in-process by the
     ``read_castep_force_constants`` calcfunction, or a prepared node -- exactly
     one, as usual), interpolates modes on a Monkhorst-Pack grid (a powder
-    average, matching :class:`~aiida_pythonjob_ins.workflows.dos.DosWorkChain`
+    average, matching :class:`~aiida_alc_ins.workflows.dos.DosWorkChain`
     rather than the symmetry-path sampling of
-    :class:`~aiida_pythonjob_ins.workflows.dispersion.DispersionWorkChain`: the
+    :class:`~aiida_alc_ins.workflows.dispersion.DispersionWorkChain`: the
     almost-isotropic incoherent approximation needs a representative *density*
     of modes, not specific q-point positions), and delegates the spectrum
     calculation to :class:`ToscaFromModesWorkChain` rather than reimplementing

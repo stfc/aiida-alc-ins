@@ -7,7 +7,7 @@ inherits only what it needs:
   (inputs, ``get_job_metadata()`` and the ``400 ERROR_SUB_PROCESS_FAILED`` exit
   code) shared by every workflow that runs PythonJobs.
 * :class:`FromForceConstantsWorkChain` -- obtaining force constants by running
-  :class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+  :class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
   as a sub-workflow, exposing its inputs under a ``force_constants`` namespace
   (so its "exactly one" validator lives in the namespace and cannot collide
   with a parent's own validator) and reporting its failure with ``402
@@ -29,7 +29,7 @@ from typing import Any
 from aiida.engine import ExitCode, ToContext, WorkChain
 from aiida.orm import AbstractCode, Dict, to_aiida_type
 
-from aiida_pythonjob_ins.workflows.force_constants import ForceConstantsWorkChain
+from aiida_alc_ins.workflows.force_constants import ForceConstantsWorkChain
 
 
 class JobDispatchWorkChain(WorkChain):
@@ -74,7 +74,7 @@ class FromForceConstantsWorkChain(WorkChain):
     """Abstract base obtaining force constants from a sub-workflow.
 
     Exposes the inputs of
-    :class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+    :class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
     under a required ``force_constants`` namespace and runs that workchain as a
     child to resolve ``self.ctx.force_constants``, always delegating to the
     child (even for a prepared node, which is passed through) so every run has

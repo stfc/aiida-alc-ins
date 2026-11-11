@@ -1,7 +1,7 @@
 """A WorkChain composing Euphonic steps into a dispersion workflow.
 
 Steps (after force constants are resolved by running
-:class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+:class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
 as a sub-workflow -- read in-process from a CASTEP file by the
 ``read_castep_force_constants`` calcfunction, or taken from a supplied node):
 
@@ -18,7 +18,7 @@ type needed. ``BandsData`` plugs into AiiDA's plotting, e.g.
 ``results['band_structure'].show_mpl()``.
 
 The file-staging PythonJob pattern that the read used to demonstrate is retained
-by :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_force_constants_inputs`,
+by :func:`aiida_alc_ins.pythonjobs.prepare_read_force_constants_inputs`,
 exercised by ``tests/test_remote_ssh.py``.
 
 WorkChain reference:
@@ -31,15 +31,15 @@ from aiida.engine import ExitCode, ToContext, calcfunction
 from aiida.orm import BandsData, Float, KpointsData, StructureData
 from aiida_pythonjob import PythonJob
 
-from aiida_pythonjob_ins.conversions import (
+from aiida_alc_ins.conversions import (
     qpoints_to_kpoints_data,
     structure_to_spglib_cell,
 )
-from aiida_pythonjob_ins.data import QpointPhononModesData
-from aiida_pythonjob_ins.data.mixins import SupportsToStructure
-from aiida_pythonjob_ins.operations import band_path_qpoints
-from aiida_pythonjob_ins.pythonjobs import prepare_interpolation_inputs
-from aiida_pythonjob_ins.workflows.base import (
+from aiida_alc_ins.data import QpointPhononModesData
+from aiida_alc_ins.data.mixins import SupportsToStructure
+from aiida_alc_ins.operations import band_path_qpoints
+from aiida_alc_ins.pythonjobs import prepare_interpolation_inputs
+from aiida_alc_ins.workflows.base import (
     FromForceConstantsWorkChain,
     JobDispatchWorkChain,
 )
@@ -88,7 +88,7 @@ class DispersionWorkChain(FromForceConstantsWorkChain, JobDispatchWorkChain):
     """Compute phonon dispersion from a CASTEP file or a ForceConstantsData node.
 
     The force-constants source is resolved by running
-    :class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+    :class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
     as a sub-workflow (see the ``force_constants`` input namespace), then a band
     path is built, modes are interpolated on it, and a ``BandsData`` is composed.
 

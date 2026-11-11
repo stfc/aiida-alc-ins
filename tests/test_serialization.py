@@ -6,7 +6,7 @@ import importlib
 
 import pytest
 
-from aiida_pythonjob_ins.serialization import EUPHONIC_SERIALIZERS
+from aiida_alc_ins.serialization import EUPHONIC_SERIALIZERS
 
 
 @pytest.mark.parametrize("key", list(EUPHONIC_SERIALIZERS))

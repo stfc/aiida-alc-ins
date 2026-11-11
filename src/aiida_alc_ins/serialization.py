@@ -49,33 +49,33 @@ def _serializer_key(cls: type) -> str:
 # Python type (module.ClassName) -> dotted path of a callable returning a Data node.
 EUPHONIC_SERIALIZERS: dict[str, str] = {
     _serializer_key(ForceConstants): (
-        "aiida_pythonjob_ins.data.force_constants.ForceConstantsData"
+        "aiida_alc_ins.data.force_constants.ForceConstantsData"
     ),
     _serializer_key(QpointPhononModes): (
-        "aiida_pythonjob_ins.data.qpoint_phonon_modes.QpointPhononModesData"
+        "aiida_alc_ins.data.qpoint_phonon_modes.QpointPhononModesData"
     ),
     # A DOS (or other Spectrum1D) becomes a native XyData.
     _serializer_key(Spectrum1D): (
-        "aiida_pythonjob_ins.serialization.spectrum1d_to_xydata_node"
+        "aiida_alc_ins.serialization.spectrum1d_to_xydata_node"
     ),
     # A TOSCA spectrum (or any Spectrum1DCollection) becomes one native XyData
     # with one y array per line (see conversions.spectrum_collection_to_xydata).
     _serializer_key(Spectrum1DCollection): (
-        "aiida_pythonjob_ins.serialization.spectrum_collection_to_xydata_node"
+        "aiida_alc_ins.serialization.spectrum_collection_to_xydata_node"
     ),
 }
 
 # AiiDA node type (module.ClassName) -> dotted path of a callable returning the object.
 EUPHONIC_DESERIALIZERS: dict[str, str] = {
-    "aiida_pythonjob_ins.data.force_constants.ForceConstantsData": (
-        "aiida_pythonjob_ins.serialization.force_constants_from_node"
+    "aiida_alc_ins.data.force_constants.ForceConstantsData": (
+        "aiida_alc_ins.serialization.force_constants_from_node"
     ),
-    "aiida_pythonjob_ins.data.qpoint_phonon_modes.QpointPhononModesData": (
-        "aiida_pythonjob_ins.serialization.qpoint_phonon_modes_from_node"
+    "aiida_alc_ins.data.qpoint_phonon_modes.QpointPhononModesData": (
+        "aiida_alc_ins.serialization.qpoint_phonon_modes_from_node"
     ),
     # A KpointsData input to the interpolation op deserializes to a q-points array.
     "aiida.orm.nodes.data.array.kpoints.KpointsData": (
-        "aiida_pythonjob_ins.serialization.kpoints_data_to_qpoints"
+        "aiida_alc_ins.serialization.kpoints_data_to_qpoints"
     ),
 }
 

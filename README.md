@@ -27,9 +27,7 @@ from aiida.plugins import WorkflowFactory
 
 load_profile()
 
-ToscaFromForceConstantsWorkChain = WorkflowFactory(
-    "pythonjob_ins.tosca_from_force_constants"
-)
+ToscaFromForceConstantsWorkChain = WorkflowFactory("alc_ins.tosca_from_force_constants")
 code = orm.load_code("python3@localhost")
 
 results, node = run_get_node(

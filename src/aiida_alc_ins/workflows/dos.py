@@ -1,7 +1,7 @@
 """A WorkChain computing a phonon density of states.
 
 After
-:class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+:class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
 resolves the force constants (read in-process from a CASTEP file by the
 ``read_castep_force_constants`` calcfunction, or taken from a supplied node) as a
 sub-workflow, a single PythonJob samples a Monkhorst-Pack grid and computes the
@@ -9,7 +9,7 @@ DOS; the euphonic ``Spectrum1D`` is serialized to a native ``XyData`` for easy
 plotting.
 
 The file-staging PythonJob pattern that the read used to demonstrate is retained
-by :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_force_constants_inputs`,
+by :func:`aiida_alc_ins.pythonjobs.prepare_read_force_constants_inputs`,
 exercised by ``tests/test_remote_ssh.py``.
 """
 
@@ -19,8 +19,8 @@ from aiida.engine import ExitCode, ToContext
 from aiida.orm import Float, XyData
 from aiida_pythonjob import PythonJob
 
-from aiida_pythonjob_ins.pythonjobs import prepare_dos_inputs
-from aiida_pythonjob_ins.workflows.base import (
+from aiida_alc_ins.pythonjobs import prepare_dos_inputs
+from aiida_alc_ins.workflows.base import (
     FromForceConstantsWorkChain,
     JobDispatchWorkChain,
 )
@@ -30,7 +30,7 @@ class DosWorkChain(FromForceConstantsWorkChain, JobDispatchWorkChain):
     """Compute a phonon DOS from a CASTEP file or a ForceConstantsData node.
 
     The force-constants source is resolved by running
-    :class:`~aiida_pythonjob_ins.workflows.force_constants.ForceConstantsWorkChain`
+    :class:`~aiida_alc_ins.workflows.force_constants.ForceConstantsWorkChain`
     as a sub-workflow (see the ``force_constants`` input namespace), then a single
     PythonJob samples a Monkhorst-Pack grid and computes the DOS.
 

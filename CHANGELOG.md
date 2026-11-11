@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING**: Renamed the import package from `aiida_pythonjob_ins` to `aiida_alc_ins`.
+- **BREAKING**: Renamed AiiDA entry-point prefixes from `pythonjob_ins.*` to `alc_ins.*` (for example, `alc_ins.dispersion` and `alc_ins.tosca_from_force_constants`).
+
 ## [0.1.0]
 
 This is the first release to PyPI, intended to be the only such release in

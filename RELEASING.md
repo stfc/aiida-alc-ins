@@ -1,7 +1,7 @@
 # Releasing
 
-This document is for maintainers. The distribution is `aiida-alc-ins` on PyPI.
-Its import package is still `aiida_pythonjob_ins` until 0.2.
+This document is for maintainers. The distribution is `aiida-alc-ins` on PyPI,
+and its import package is `aiida_alc_ins`.
 
 The release workflow is `.github/workflows/publish.yml`. It builds the source
 distribution and the wheel, checks them, tests the wheel in a clean Python 3.11
