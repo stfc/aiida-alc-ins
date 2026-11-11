@@ -3,13 +3,13 @@
 An [AiiDA](https://www.aiida.net) plugin for lattice dynamics and inelastic neutron scattering (INS) simulations. It wraps Python libraries for phonon modelling and spectrum calculation ([Euphonic](https://euphonic.readthedocs.io/), [abinslib](https://isisneutronmuon.github.io/abINS_lib/), and [resins](https://pace-neutrons.github.io/resins/)) into reproducible workflows, using [aiida-pythonjob](https://github.com/aiidateam/aiida-pythonjob) to dispatch calculations directly from Python without command-line wrappers.
 
 > ⚠️ **Status: Agentic Prototype**  
-> This package is an experiment in using agentic coding ("vibe coding") to accelerate research software infrastructure at the STFC Ada Lovelace Centre. It has been developed rapidly with LLMs. While changes are planned and tracked with [OpenSpec](https://openspec.dev/) and backed by automated integration tests, it has not undergone traditional line-by-line human review. Expect fast iteration and breaking changes before 1.0. **Do not use in production without reviewing the code.**
+> This package is an experiment in use of agentic coding ("vibe coding") to accelerate research software infrastructure at the [STFC Ada Lovelace Centre](https://www.sc.stfc.ac.uk/programmes/ada-lovelace-centre-alc/). It has been developed rapidly with LLMs, as a thin layer around libraries providing the scientific capability. While changes are planned and tracked with [OpenSpec](https://openspec.dev/) and backed by automated integration tests, it has not undergone full line-by-line human review. Expect fast iteration and breaking changes before 1.0. **Do not use in production without reviewing the code.**
 
 ## Features
 
-- **Input support**: Read force constants from CASTEP (`.castep_bin`) or Phonopy (`phonopy.yaml` + `FORCE_CONSTANTS` / `force_constants.hdf5`), processed in-process via calcfunctions.
-- **Lattice dynamics**: Compute phonon dispersions (`BandsData`) and density of states (`XyData`) with automatic band-path generation via seekpath.
-- **INS spectra**: Simulate TOSCA instrument spectra (fundamentals and combination modes via `abinslib`, instrument resolution broadening via `resins`), with intensity decomposition grouped by element, atom, or quantum order.
+- **Input support**: Read force constants from CASTEP (`.castep_bin`) or Phonopy (`phonopy.yaml` + `FORCE_CONSTANTS` / `force_constants.hdf5`).
+- **Lattice dynamics**: Compute phonon dispersions (`BandsData`) and density of states (`XyData`) with automatic band-path generation via [seeK-path](https://github.com/materialscloud-org/seekpath).
+- **INS spectra**: Simulate inelastic neutron scattering on the TOSCA instrument (fundamentals and combination modes via `abinslib`, instrument resolution broadening via `resins`), with intensity decomposition grouped by element, atom, or quantum order.
 - **Full provenance**: Workflows automatically record calculation steps, interpolation parameters, and intermediate modes in the AiiDA provenance graph.
 
 ## Installation
@@ -56,16 +56,15 @@ for label, intensities, _ in spectrum_node.get_y():
 ## Documentation & Specs
 
 - **Documentation**: [https://stfc.github.io/aiida-alc-ins/](https://stfc.github.io/aiida-alc-ins/)  
-  Includes API references and a tutorial gallery executed during the docs build, showing workflow results and interactive provenance graphs.
+  Includes API reference and a tutorial gallery.
 - **Specifications**: Changes and component behaviors are documented in [`openspec/specs/`](./openspec/specs/), with background reasoning in [`docs/source/design_notes.rst`](./docs/source/design_notes.rst).
 
 ## Development
 
-This project uses [`uv`](https://docs.astral.sh/uv/) and Python 3.12:
+Run the test suite with [`uv`](https://docs.astral.sh/uv/):
 
 ```bash
-uv sync
 uv run pytest
 ```
 
-Integration tests run in parallel by default (`pytest-xdist`) using a shared, locked container fixture.
+`uv run` automatically creates `.venv` and installs dependencies. Integration tests run in parallel by default (`pytest-xdist`) using a shared, locked container fixture.
