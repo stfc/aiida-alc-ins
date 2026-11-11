@@ -28,7 +28,7 @@ class AiiDAImportRecorder:
 
     def find_spec(self, name: str, path, target=None):
         # Match exactly 'aiida' or names starting with 'aiida.'
-        # (not 'aiida_pythonjob_ins' or other packages with the same prefix)
+        # (not 'aiida_alc_ins' or other packages with the same prefix)
         is_aiida = name == "aiida" or name.startswith("aiida.")
         if is_aiida and self.first_hit_module is None:
             self.first_hit_module = name
@@ -67,7 +67,7 @@ def main() -> None:
 
     # Now import the operations module
     try:
-        import aiida_pythonjob_ins.operations as operations  # noqa: PLC0415
+        import aiida_alc_ins.operations as operations  # noqa: PLC0415
     except Exception as e:  # noqa: BLE001
         report_and_exit("error", error_type=type(e).__name__, error_message=str(e))
 

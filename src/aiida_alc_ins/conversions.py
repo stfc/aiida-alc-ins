@@ -23,10 +23,10 @@ Data-class methods (``to_structure``/``to_kpoints``/``to_bands``), which must wo
 without any engine. Several also take/return non-node objects (euphonic
 ``Crystal``, ``ndarray``), which a calcfunction could not accept. Provenance is
 recorded one level up, by the ``@calcfunction``/``PythonJob`` wrappers in
-:mod:`aiida_pythonjob_ins.workflows` that call these helpers.
+:mod:`aiida_alc_ins.workflows` that call these helpers.
 
 (The reverse direction -- node -> plain Python for aiida-pythonjob *inputs* -- is
-a deserialization concern and lives in :mod:`aiida_pythonjob_ins.serialization`.)
+a deserialization concern and lives in :mod:`aiida_alc_ins.serialization`.)
 """
 
 from __future__ import annotations
@@ -236,7 +236,7 @@ def xydata_to_spectrum_collection(xy: XyData) -> Spectrum1DCollection:
     node attributes, so the recovered collection can be grouped, selected and
     summed by that metadata exactly as the original could -- which is what lets
     the grouping step in
-    :mod:`aiida_pythonjob_ins.workflows.tosca` operate on data read back from
+    :mod:`aiida_alc_ins.workflows.tosca` operate on data read back from
     the graph rather than needing the original Python object.
 
     Bin *centres* are recovered, not edges (see the module-level note on

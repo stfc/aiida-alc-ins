@@ -9,8 +9,8 @@ from aiida.engine import run_get_node
 from aiida.orm import Float, SinglefileData, XyData
 from aiida_pythonjob import PythonJob
 
-from aiida_pythonjob_ins.pythonjobs import prepare_read_force_constants_inputs
-from aiida_pythonjob_ins.workflows import DosWorkChain
+from aiida_alc_ins.pythonjobs import prepare_read_force_constants_inputs
+from aiida_alc_ins.workflows import DosWorkChain
 
 
 @pytest.mark.containerized

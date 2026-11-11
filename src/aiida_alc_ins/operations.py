@@ -5,7 +5,7 @@ AiiDA, so they can be unit-tested directly and reused elsewhere. Crucially, this
 module's import chain is AiiDA-free (the package ``__init__`` is empty), so
 by-reference cloudpickling can target a lean remote environment (euphonic +
 seekpath + numpy, no aiida). They are turned into AiiDA PythonJobs by the
-helpers in :mod:`aiida_pythonjob_ins.pythonjobs`.
+helpers in :mod:`aiida_alc_ins.pythonjobs`.
 
 The dispersion workflow is built from composable pieces, mirroring
 ``euphonic.cli.dispersion`` (https://euphonic.readthedocs.io/en/stable/cli.html)
@@ -16,7 +16,7 @@ without relying on Euphonic's private ``_bands_from_force_constants`` helper:
 
 ``calculate_dispersion`` is a convenience that chains the two. The band path is
 turned into a native ``KpointsData`` by a parent-side ``calcfunction`` (see
-:func:`aiida_pythonjob_ins.workflows.dispersion.generate_band_path`), so these
+:func:`aiida_alc_ins.workflows.dispersion.generate_band_path`), so these
 functions stay AiiDA-free and unit-testable.
 """
 
@@ -88,7 +88,7 @@ def read_force_constants_from_castep(filename: str | Path) -> ForceConstants:
 
     ``filename`` is resolved relative to the working directory. When run as a
     PythonJob the CASTEP file is staged there via ``upload_files`` (see
-    :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_force_constants_inputs`).
+    :func:`aiida_alc_ins.pythonjobs.prepare_read_force_constants_inputs`).
     """
     LOGGER.info("Reading force constants from CASTEP file: %s", filename)
     return ForceConstants.from_castep(filename)
@@ -103,7 +103,7 @@ def read_force_constants_from_phonopy(
 
     Thin wrapper over ``ForceConstants.from_phonopy``. Relative file names are
     joined to the current working directory (absolute names are used as given).
-    As a PythonJob, :func:`aiida_pythonjob_ins.pythonjobs.prepare_read_phonopy_inputs`
+    As a PythonJob, :func:`aiida_alc_ins.pythonjobs.prepare_read_phonopy_inputs`
     stages the files there under the names it passes. Both are likely to be removed
     before version 1.0. Pass ``born_name=None`` to skip Born charges.
     """
@@ -416,7 +416,7 @@ def broaden_tosca_spectrum(
     Because ``resins``' broadening operator is linear, this gives the same
     result whether applied before or after summing lines (see
     ``group_spectra``/``broaden_spectra`` in
-    :mod:`aiida_pythonjob_ins.workflows.tosca`, which rely on this).
+    :mod:`aiida_alc_ins.workflows.tosca`, which rely on this).
 
     A collection is broadened line by line: the underlying ``resins`` model
     only accepts a single 1-D intensity array per call (see
@@ -461,7 +461,7 @@ def interpolate_phonon_modes_on_grid(
     set of q-points (e.g. a high-symmetry band path), this samples the whole
     Brillouin zone the way :func:`calculate_dos` does -- the sampling
     :class:`ToscaFromForceConstantsWorkChain
-    <aiida_pythonjob_ins.workflows.tosca.ToscaFromForceConstantsWorkChain>` needs.
+    <aiida_alc_ins.workflows.tosca.ToscaFromForceConstantsWorkChain>` needs.
     The almost-isotropic incoherent approximation disregards actual q-point
     *positions* (see the reference pipeline's kinematic treatment in
     :func:`calculate_tosca_spectrum`), but still needs a representative *density*

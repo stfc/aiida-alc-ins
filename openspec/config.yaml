@@ -1,7 +1,7 @@
 schema: spec-driven
 
 context: |
-  Project: `aiida-alc-ins` (import package `aiida_pythonjob_ins` until 0.2) is an
+  Project: `aiida-alc-ins` (import package `aiida_alc_ins`) is an
   AiiDA plugin that runs inelastic-neutron-scattering / lattice-dynamics Python
   libraries -- currently Euphonic -- through the `aiida-pythonjob` execution
   model rather than command-line entry-point wrappers. It is a proof-of-concept

@@ -1,14 +1,14 @@
 """AiiDA process wrappers around the atomic Euphonic operations.
 
 We use ``aiida-pythonjob`` to run the plain functions in
-:mod:`aiida_pythonjob_ins.operations` as AiiDA ``PythonJob`` processes.
+:mod:`aiida_alc_ins.operations` as AiiDA ``PythonJob`` processes.
 ``PythonJob`` runs through a ``Code`` on a ``Computer`` (localhost in tests, but
 any configured machine in production), so the standard AiiDA Computer/Code hooks
 apply. See https://github.com/aiidateam/aiida-pythonjob .
 
 Code-environment note: aiida-pythonjob cloudpickles these module-level functions
 *by reference* -- a tiny module+name string per job -- so the remote unpickles via
-``from aiida_pythonjob_ins.operations import ...``. That module's import chain is
+``from aiida_alc_ins.operations import ...``. That module's import chain is
 deliberately AiiDA-free, so loading the function on the remote does not import or
 initialise aiida (no profile/config needed there). By-reference pickling is the
 required execution strategy: scientific dependencies like Euphonic, NumPy, and
@@ -25,7 +25,7 @@ from typing import Any
 from aiida import orm
 from aiida_pythonjob import prepare_pythonjob_inputs
 
-from aiida_pythonjob_ins.operations import (
+from aiida_alc_ins.operations import (
     band_path_qpoints,
     calculate_dispersion,
     calculate_dos,
@@ -35,7 +35,7 @@ from aiida_pythonjob_ins.operations import (
     read_force_constants_from_castep,
     read_force_constants_from_phonopy,
 )
-from aiida_pythonjob_ins.serialization import (
+from aiida_alc_ins.serialization import (
     EUPHONIC_DESERIALIZERS,
     EUPHONIC_SERIALIZERS,
 )
@@ -76,7 +76,7 @@ def prepare_interpolation_inputs(
 
     ``qpoints`` is a native ``KpointsData`` q-point specification, deserialized to
     a fractional-coordinate array before interpolation. The returned modes are
-    serialized to a :class:`~aiida_pythonjob_ins.data.QpointPhononModesData`.
+    serialized to a :class:`~aiida_alc_ins.data.QpointPhononModesData`.
 
     Parameters
     ----------
@@ -116,7 +116,7 @@ def prepare_read_force_constants_inputs(
     The CASTEP file is staged into the job's working directory via ``upload_files``
     (mirroring how a real remote calculation stages its inputs); the function then
     reads it by basename and returns a ``ForceConstants`` serialized to a
-    :class:`~aiida_pythonjob_ins.data.ForceConstantsData` node.
+    :class:`~aiida_alc_ins.data.ForceConstantsData` node.
 
     .. note::
        This builder demonstrates ``PythonJob`` file staging; none of this
@@ -224,7 +224,7 @@ def prepare_dispersion_inputs(
     Parameters
     ----------
     force_constants
-        A :class:`~aiida_pythonjob_ins.data.ForceConstantsData` node. It is
+        A :class:`~aiida_alc_ins.data.ForceConstantsData` node. It is
         deserialized to a Euphonic ``ForceConstants`` before the function runs.
     q_spacing
         Target q-point spacing in 1/Angstrom.
@@ -361,11 +361,11 @@ def prepare_tosca_spectrum_inputs(
 ) -> dict[str, Any]:
     """Build inputs to run :func:`calculate_tosca_spectrum` as a PythonJob.
 
-    ``modes`` is a :class:`~aiida_pythonjob_ins.data.QpointPhononModesData` node,
+    ``modes`` is a :class:`~aiida_alc_ins.data.QpointPhononModesData` node,
     deserialized to a Euphonic ``QpointPhononModes`` before the function runs.
     The returned ``Spectrum1DCollection`` -- the full, ungrouped line set -- is
     serialized to a single native ``XyData`` with one y array per line (see
-    :func:`aiida_pythonjob_ins.conversions.spectrum_collection_to_xydata`).
+    :func:`aiida_alc_ins.conversions.spectrum_collection_to_xydata`).
 
     ``detector_angles`` defaults to ``None`` here (rather than a mutable literal
     default) and is passed through unchanged; :func:`calculate_tosca_spectrum`

@@ -1,8 +1,8 @@
 """Band structure and DOS from Phonopy input
 ============================================
 
-Run :class:`~aiida_pythonjob_ins.workflows.DispersionWorkChain` and
-:class:`~aiida_pythonjob_ins.workflows.DosWorkChain` on NaCl **Phonopy** output
+Run :class:`~aiida_alc_ins.workflows.DispersionWorkChain` and
+:class:`~aiida_alc_ins.workflows.DosWorkChain` on NaCl **Phonopy** output
 (``phonopy_nofc_noborn.yaml`` + ``force_constants.hdf5`` + ``BORN_nacl``). The
 files are passed straight to each workflow as its ``phonopy`` force-constants
 source; nothing reads them in a separate step first. The last section shows how
@@ -28,9 +28,9 @@ code = get_python_code()
 from aiida.plugins import WorkflowFactory
 
 # Load via WorkflowFactory (direct imports like
-# `from aiida_pythonjob_ins.workflows import ...` also work)
-DispersionWorkChain = WorkflowFactory("pythonjob_ins.dispersion")
-DosWorkChain = WorkflowFactory("pythonjob_ins.dos")
+# `from aiida_alc_ins.workflows import ...` also work)
+DispersionWorkChain = WorkflowFactory("alc_ins.dispersion")
+DosWorkChain = WorkflowFactory("alc_ins.dos")
 
 phonopy_files = {
     "summary": orm.SinglefileData(
@@ -51,7 +51,7 @@ phonopy_files = {
 from aiida.manage.configuration import get_config
 
 READ_PHONOPY_PROCESS_TYPE = (
-    "aiida_pythonjob_ins.workflows.force_constants.read_phonopy_force_constants"
+    "aiida_alc_ins.workflows.force_constants.read_phonopy_force_constants"
 )
 get_config().set_option("caching.enabled_for", [READ_PHONOPY_PROCESS_TYPE])
 

@@ -13,12 +13,12 @@ from inspect import isclass
 import pytest
 from aiida.plugins import DataFactory, WorkflowFactory
 
-from aiida_pythonjob_ins.data import (
+from aiida_alc_ins.data import (
     EuphonicCrystalData,
     ForceConstantsData,
     QpointPhononModesData,
 )
-from aiida_pythonjob_ins.workflows import (
+from aiida_alc_ins.workflows import (
     DispersionWorkChain,
     DosWorkChain,
     ForceConstantsWorkChain,
@@ -30,9 +30,9 @@ from aiida_pythonjob_ins.workflows import (
 @pytest.mark.parametrize(
     ("entry_point_name", "expected_class"),
     [
-        ("pythonjob_ins.crystal", EuphonicCrystalData),
-        ("pythonjob_ins.force_constants", ForceConstantsData),
-        ("pythonjob_ins.qpoint_phonon_modes", QpointPhononModesData),
+        ("alc_ins.crystal", EuphonicCrystalData),
+        ("alc_ins.force_constants", ForceConstantsData),
+        ("alc_ins.qpoint_phonon_modes", QpointPhononModesData),
     ],
 )
 def test_data_plugin_registration(aiida_profile, entry_point_name, expected_class):
@@ -44,12 +44,12 @@ def test_data_plugin_registration(aiida_profile, entry_point_name, expected_clas
 @pytest.mark.parametrize(
     ("entry_point_name", "expected_class"),
     [
-        ("pythonjob_ins.force_constants", ForceConstantsWorkChain),
-        ("pythonjob_ins.dispersion", DispersionWorkChain),
-        ("pythonjob_ins.dos", DosWorkChain),
-        ("pythonjob_ins.tosca_from_modes", ToscaFromModesWorkChain),
+        ("alc_ins.force_constants", ForceConstantsWorkChain),
+        ("alc_ins.dispersion", DispersionWorkChain),
+        ("alc_ins.dos", DosWorkChain),
+        ("alc_ins.tosca_from_modes", ToscaFromModesWorkChain),
         (
-            "pythonjob_ins.tosca_from_force_constants",
+            "alc_ins.tosca_from_force_constants",
             ToscaFromForceConstantsWorkChain,
         ),
     ],

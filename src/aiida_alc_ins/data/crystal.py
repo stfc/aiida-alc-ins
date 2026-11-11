@@ -13,7 +13,7 @@ from typing import ClassVar, Self
 from aiida.orm import StructureData
 from euphonic import Crystal
 
-from aiida_pythonjob_ins.conversions import (
+from aiida_alc_ins.conversions import (
     crystal_to_structure,
     structure_to_crystal,
 )

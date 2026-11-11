@@ -21,19 +21,19 @@ These pages are generated from the live process **spec** by AiiDA's
 exit codes listed in each workflow's description.
 
 .. aiida-workchain:: ForceConstantsWorkChain
-   :module: aiida_pythonjob_ins.workflows.force_constants
+   :module: aiida_alc_ins.workflows.force_constants
 
 .. aiida-workchain:: DispersionWorkChain
-   :module: aiida_pythonjob_ins.workflows.dispersion
+   :module: aiida_alc_ins.workflows.dispersion
 
 .. aiida-workchain:: DosWorkChain
-   :module: aiida_pythonjob_ins.workflows.dos
+   :module: aiida_alc_ins.workflows.dos
 
 .. aiida-workchain:: ToscaFromModesWorkChain
-   :module: aiida_pythonjob_ins.workflows.tosca
+   :module: aiida_alc_ins.workflows.tosca
 
 .. aiida-workchain:: ToscaFromForceConstantsWorkChain
-   :module: aiida_pythonjob_ins.workflows.tosca
+   :module: aiida_alc_ins.workflows.tosca
 
 .. _building-on-force-constants:
 
@@ -51,7 +51,7 @@ The shortcut: ``FromForceConstantsWorkChain``
 
 The workflows in this package all use ``ForceConstantsWorkChain`` the same way,
 so that shared code lives in one helper base class,
-``FromForceConstantsWorkChain`` (in ``aiida_pythonjob_ins.workflows.base``).
+``FromForceConstantsWorkChain`` (in ``aiida_alc_ins.workflows.base``).
 Its name says what it is for: workflows that start *from* force constants. It
 does not inherit from ``ForceConstantsWorkChain``. Instead, it runs
 ``ForceConstantsWorkChain`` for you. Inheriting it gives your workflow:
@@ -70,7 +70,7 @@ A minimal example:
 
 .. code-block:: python
 
-    from aiida_pythonjob_ins.workflows.base import FromForceConstantsWorkChain
+    from aiida_alc_ins.workflows.base import FromForceConstantsWorkChain
 
 
     class MyWorkChain(FromForceConstantsWorkChain):
@@ -114,7 +114,7 @@ Here is a workflow that compares two sources:
 
     from aiida.engine import ToContext, WorkChain
 
-    from aiida_pythonjob_ins.workflows import ForceConstantsWorkChain
+    from aiida_alc_ins.workflows import ForceConstantsWorkChain
 
 
     class CompareWorkChain(WorkChain):

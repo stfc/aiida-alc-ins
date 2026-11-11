@@ -1,7 +1,7 @@
 """Phonon density of states from CASTEP force constants
 ======================================================
 
-Run :class:`~aiida_pythonjob_ins.workflows.DosWorkChain` on quartz force constants
+Run :class:`~aiida_alc_ins.workflows.DosWorkChain` on quartz force constants
 (a CASTEP ``.castep_bin``), plot the density of states, and visualise the AiiDA
 provenance graph.
 """
@@ -26,8 +26,8 @@ code = get_python_code()
 from aiida.plugins import WorkflowFactory
 
 # Load via WorkflowFactory (direct imports like
-# `from aiida_pythonjob_ins.workflows import DosWorkChain` also work)
-DosWorkChain = WorkflowFactory("pythonjob_ins.dos")
+# `from aiida_alc_ins.workflows import DosWorkChain` also work)
+DosWorkChain = WorkflowFactory("alc_ins.dos")
 
 results, node = run_get_node(
     DosWorkChain,

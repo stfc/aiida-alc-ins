@@ -66,7 +66,7 @@ COPY src /tmp/deps/src
 RUN cd /tmp/deps && su - ubuntu -c "cd /tmp/deps && \
     uv pip install --no-cache --python /home/ubuntu/venv --no-deps . && \
     uv pip uninstall --python /home/ubuntu/venv aiida-core aiida-pythonjob && \
-    /home/ubuntu/venv/bin/python -c 'import aiida_pythonjob_ins.operations; import sys; assert \"aiida\" not in sys.modules'"
+    /home/ubuntu/venv/bin/python -c 'import aiida_alc_ins.operations; import sys; assert \"aiida\" not in sys.modules'"
 
 COPY tests/container/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

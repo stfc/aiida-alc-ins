@@ -25,18 +25,18 @@ from aiida.orm import (
 from euphonic import ForceConstants, QpointPhononModes
 from tests.assertions import assert_equivalent_force_constants
 
-from aiida_pythonjob_ins.data import ForceConstantsData, QpointPhononModesData
-from aiida_pythonjob_ins.workflows import (
+from aiida_alc_ins.data import ForceConstantsData, QpointPhononModesData
+from aiida_alc_ins.workflows import (
     DispersionWorkChain,
     DosWorkChain,
     ToscaFromForceConstantsWorkChain,
     ToscaFromModesWorkChain,
 )
-from aiida_pythonjob_ins.workflows.force_constants import (
+from aiida_alc_ins.workflows.force_constants import (
     read_castep_force_constants,
     read_phonopy_force_constants,
 )
-from aiida_pythonjob_ins.workflows.tosca import group_spectra
+from aiida_alc_ins.workflows.tosca import group_spectra
 
 # The process_type aiida-pythonjob registers PythonJob under -- see
 # `PythonJob.build_process_type()` -- needed as the `enable_caching` identifier

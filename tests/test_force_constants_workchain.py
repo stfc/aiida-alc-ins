@@ -12,8 +12,8 @@ from aiida.orm import CalcFunctionNode, SinglefileData
 from euphonic import ForceConstants
 from tests.assertions import assert_equivalent_force_constants
 
-from aiida_pythonjob_ins.data import ForceConstantsData
-from aiida_pythonjob_ins.workflows.force_constants import ForceConstantsWorkChain
+from aiida_alc_ins.data import ForceConstantsData
+from aiida_alc_ins.workflows.force_constants import ForceConstantsWorkChain
 
 
 def test_spec_has_no_code_or_options():
