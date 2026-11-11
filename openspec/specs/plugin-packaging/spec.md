@@ -9,7 +9,7 @@ without imposing avoidable dependency conflicts.
 ### Requirement: Plugin classes are discoverable through AiiDA entry points
 
 The package SHALL register its data types under the `aiida.data` entry-point group
-and its workflows under `aiida.workflows`, using the `pythonjob_ins` prefix, so
+and its workflows under `aiida.workflows`, using the `alc_ins` prefix, so
 that AiiDA users can load them through the standard plugin factories rather than
 by direct import. The registered set SHALL cover every data type and workflow
 intended for users to load, so introducing one is a modification to this
@@ -21,16 +21,16 @@ result alone does not.
 
 #### Scenario: Data classes load through the data factory
 
-- **WHEN** `pythonjob_ins.crystal`, `pythonjob_ins.force_constants` or
-  `pythonjob_ins.qpoint_phonon_modes` is requested from AiiDA's data factory
+- **WHEN** `alc_ins.crystal`, `alc_ins.force_constants` or
+  `alc_ins.qpoint_phonon_modes` is requested from AiiDA's data factory
 - **THEN** the corresponding `EuphonicCrystalData`, `ForceConstantsData` or
   `QpointPhononModesData` class is returned
 
 #### Scenario: Workflows load through the workflow factory
 
-- **WHEN** `pythonjob_ins.force_constants`, `pythonjob_ins.dispersion`,
-  `pythonjob_ins.dos`, `pythonjob_ins.tosca_from_modes` or
-  `pythonjob_ins.tosca_from_force_constants` is requested from AiiDA's workflow
+- **WHEN** `alc_ins.force_constants`, `alc_ins.dispersion`,
+  `alc_ins.dos`, `alc_ins.tosca_from_modes` or
+  `alc_ins.tosca_from_force_constants` is requested from AiiDA's workflow
   factory
 - **THEN** the corresponding `ForceConstantsWorkChain`, `DispersionWorkChain`,
   `DosWorkChain`, `ToscaFromModesWorkChain` or `ToscaFromForceConstantsWorkChain`
@@ -105,7 +105,7 @@ the decoupled weighting API introduced in abinslib 0.2.
 ### Requirement: The distribution installs as a standard Python package
 
 The distribution SHALL be named `aiida-alc-ins` and provide the import
-package `aiida_pythonjob_ins` from a src layout, SHALL declare its supported
+package `aiida_alc_ins` from a src layout, SHALL declare its supported
 Python version range as Python 3.11 or greater (`>=3.11`), and SHALL be built by a PEP 517 backend consistent with the
 project's uv-based workflow. The distribution SHALL carry the descriptive metadata
 a package index displays: a description, licence, project links, authors and
@@ -114,7 +114,7 @@ classifiers, including its development status.
 #### Scenario: Installing provides the import package
 
 - **WHEN** the distribution `aiida-alc-ins` is installed
-- **THEN** `aiida_pythonjob_ins` is importable
+- **THEN** `aiida_alc_ins` is importable
 
 #### Scenario: The Python version requirement is enforced
 
@@ -130,7 +130,7 @@ classifiers, including its development status.
 
 ### Requirement: The package reports its version from its distribution metadata
 
-The package SHALL expose `aiida_pythonjob_ins.__version__`, equal to the version
+The package SHALL expose `aiida_alc_ins.__version__`, equal to the version
 of the installed distribution. The version SHALL be written in one place only, so
 that the value reported by the package, the distribution metadata and the
 documentation cannot disagree. Because AiiDA records a plugin's version in the
@@ -139,13 +139,13 @@ runs of this package's workflows SHALL record the package version.
 
 #### Scenario: The reported version matches the installed distribution
 
-- **WHEN** `aiida_pythonjob_ins.__version__` is read in an environment where the
+- **WHEN** `aiida_alc_ins.__version__` is read in an environment where the
   distribution is installed
 - **THEN** it equals the version in the installed distribution's metadata
 
 #### Scenario: The reported version matches the declared version
 
-- **WHEN** `aiida_pythonjob_ins.__version__` is read in an environment where the
+- **WHEN** `aiida_alc_ins.__version__` is read in an environment where the
   distribution is installed from the current source
 - **THEN** it equals the version declared in the project's configuration
 
